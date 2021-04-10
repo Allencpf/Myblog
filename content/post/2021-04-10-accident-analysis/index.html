@@ -1,0 +1,273 @@
+---
+title: accident analysis
+author: Trevor
+date: '2021-04-10'
+slug: accident-analysis
+categories:
+  - Example
+tags: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<pre class="r"><code>knitr::opts_chunk$set(comment = &quot;#&quot;, collapse = T, 
+                      fig.height = 5, fig.width = 5)</code></pre>
+<pre class="r"><code>library(tidyverse)
+dfdemo &lt;- read_csv(&quot;/Users/cpf/Documents/paper/R_programming/Rprocess/mydata/dfdemo.csv&quot;)
+dfdemo_wide &lt;- 
+head(dfdemo,5)</code></pre>
+<pre class="r"><code>dfdemo %&gt;% #按驾驶员1和2计算对应受伤严重的驾驶员个数
+  group_by(VENO) %&gt;% 
+  count(INJ_SEV)
+# # A tibble: 8 x 3
+# # Groups:   VENO [2]
+#    VENO INJ_SEV     n
+#   &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt;
+# 1     1       0    40
+# 2     1       1     6
+# 3     1       2     3
+# 4     1       3     1
+# 5     2       0    36
+# 6     2       1     9
+# 7     2       2     3
+# 8     2       3     2</code></pre>
+<pre class="r"><code>library(MASS)
+# 
+# Attaching package: &#39;MASS&#39;
+# The following object is masked from &#39;package:dplyr&#39;:
+# 
+#     select
+dfdemo1 &lt;- dfdemo %&gt;% 
+  dplyr::mutate(
+    across(c(SEX,AGE1, REST_USE, WEATHHER,INJ_SEV), as.factor),
+    across(c(INJ_SEV), ~ fct_inseq(., ordered = TRUE))
+  )
+
+fit1 &lt;- polr(INJ_SEV ~ SEX + AGE1 + AGE + REST_USE + WEATHHER ,
+             data = dfdemo1, 
+             method = c(&quot;logistic&quot;))
+summary(fit1)
+# 
+# Re-fitting to get Hessian
+# Call:
+# polr(formula = INJ_SEV ~ SEX + AGE1 + AGE + REST_USE + WEATHHER, 
+#     data = dfdemo1, method = c(&quot;logistic&quot;))
+# 
+# Coefficients:
+#              Value Std. Error t value
+# SEX1      -0.63018    0.51054 -1.2344
+# AGE11     -0.43892    0.84225 -0.5211
+# AGE12     -2.26491    1.58141 -1.4322
+# AGE13     -1.58207    2.56445 -0.6169
+# AGE        0.05258    0.04785  1.0989
+# REST_USE1 -2.82003    1.07006 -2.6354
+# WEATHHER1 -0.78644    1.14229 -0.6885
+# WEATHHER2 -0.49560    0.88679 -0.5589
+# 
+# Intercepts:
+#     Value   Std. Error t value
+# 0|1 -0.7535  1.5554    -0.4844
+# 1|2  0.6073  1.5582     0.3897
+# 2|3  1.9818  1.5634     1.2677
+# 
+# Residual Deviance: 136.8309 
+# AIC: 158.8309</code></pre>
+<p>输出结果得到有序分类Logistic回归模型中截距和回归系数的最大似然估计值，确定回归方程为：</p>
+<pre class="r"><code>library(equatiomatic)
+extract_eq(fit1, use_coefs = TRUE)
+# 
+# Re-fitting to get Hessian
+# 
+# 
+# Re-fitting to get Hessian</code></pre>
+<p><span class="math display">\[
+\begin{aligned}
+\log\left[ \frac { P( \operatorname{0} \geq \operatorname{1} ) }{ 1 - P( \operatorname{0} \geq \operatorname{1} ) } \right] &amp;= -0.75 - 0.63(\operatorname{SEX}_{\operatorname{1}}) - 0.44(\operatorname{AGE1}_{\operatorname{1}} \times \operatorname{AGE}_{\operatorname{11}}) - 2.26(\operatorname{AGE1}_{\operatorname{2}} \times \operatorname{AGE}_{\operatorname{12}}) - 1.58(\operatorname{AGE1}_{\operatorname{3}} \times \operatorname{AGE}_{\operatorname{13}}) + 0.05(\operatorname{AGE}) - 2.82(\operatorname{REST\_USE}_{\operatorname{1}}) - 0.79(\operatorname{WEATHHER}_{\operatorname{1}}) - 0.5(\operatorname{WEATHHER}_{\operatorname{2}}) \\
+\log\left[ \frac { P( \operatorname{1} \geq \operatorname{2} ) }{ 1 - P( \operatorname{1} \geq \operatorname{2} ) } \right] &amp;= 0.61 - 0.63(\operatorname{SEX}_{\operatorname{1}}) - 0.44(\operatorname{AGE1}_{\operatorname{1}} \times \operatorname{AGE}_{\operatorname{11}}) - 2.26(\operatorname{AGE1}_{\operatorname{2}} \times \operatorname{AGE}_{\operatorname{12}}) - 1.58(\operatorname{AGE1}_{\operatorname{3}} \times \operatorname{AGE}_{\operatorname{13}}) + 0.05(\operatorname{AGE}) - 2.82(\operatorname{REST\_USE}_{\operatorname{1}}) - 0.79(\operatorname{WEATHHER}_{\operatorname{1}}) - 0.5(\operatorname{WEATHHER}_{\operatorname{2}}) \\
+\log\left[ \frac { P( \operatorname{2} \geq \operatorname{3} ) }{ 1 - P( \operatorname{2} \geq \operatorname{3} ) } \right] &amp;= 1.98 - 0.63(\operatorname{SEX}_{\operatorname{1}}) - 0.44(\operatorname{AGE1}_{\operatorname{1}} \times \operatorname{AGE}_{\operatorname{11}}) - 2.26(\operatorname{AGE1}_{\operatorname{2}} \times \operatorname{AGE}_{\operatorname{12}}) - 1.58(\operatorname{AGE1}_{\operatorname{3}} \times \operatorname{AGE}_{\operatorname{13}}) + 0.05(\operatorname{AGE}) - 2.82(\operatorname{REST\_USE}_{\operatorname{1}}) - 0.79(\operatorname{WEATHHER}_{\operatorname{1}}) - 0.5(\operatorname{WEATHHER}_{\operatorname{2}})
+\end{aligned}
+\]</span>
+### 系数的解释（odds ratio OR）优势比</p>
+<pre class="r"><code>coef(fit1) %&gt;%  exp()
+#       SEX1      AGE11      AGE12      AGE13        AGE  REST_USE1  WEATHHER1 
+# 0.53249348 0.64473487 0.10383922 0.20554929 1.05399100 0.05960394 0.45546231 
+#  WEATHHER2 
+# 0.60920642</code></pre>
+<ul>
+<li>SEX:在其它因素不变的情况下，男性要比女性会增加受伤严重程度向上提高一个级别的概率0.53倍，也就是减少了47%</li>
+<li>WEAHTER1:在其它因素不变的情况下，雨天受伤严重程度提高一个级别的概率比晴天减少55%。
+### 边际效应</li>
+</ul>
+<pre class="r"><code>library(margins)
+me &lt;- marginal_effects(fit1, variables = c(&quot;SEX&quot;, &quot;AGE&quot;, &quot;REST_USE&quot;, &quot;WEATHHER&quot;))
+
+me %&gt;%  # 求每一个解释变量的平均边际效应
+  summarise(across(everything(), mean, na.rm = TRUE))
+#       dydx_AGE  dydx_SEX1 dydx_REST_USE1 dydx_WEATHHER1 dydx_WEATHHER2
+# 1 -0.008049877 0.09797588       0.560037      0.1074138     0.07248451</code></pre>
+<p>##Logistic回归深度学习</p>
+<pre class="r"><code>library(mlr3verse)
+library(nnet)</code></pre>
+<div id="划分训练集测试集" class="section level3">
+<h3>划分训练集测试集</h3>
+<ul>
+<li>为了保持训练集、测试集的分类因变量数据具有相似的占比，采用分层 重抽样方法，需要设置任务的列角色的分层属性 staratum 为因变量</li>
+<li>做留出 (holdout) 重抽样，80% 作为训练集，其余 20% 作为测试集</li>
+<li>根据任务对重抽样做实例化，取出训练集索引和测试集索引</li>
+</ul>
+</div>
+<div id="plot" class="section level2">
+<h2>plot</h2>
+<pre class="r"><code>mosaicplot(~ WEATHHER + SEX + INJ_SEV, data=dfdemo[which(dfdemo$REST_USE==&quot;1&quot;),], shade = TRUE, lengend = TRUE)
+# Warning: In mosaicplot.default(table(mf), main = main, ...) :
+#  extra argument &#39;lengend&#39; will be disregarded</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-9-1.png" width="480" /></p>
+<pre class="r"><code>mosaicplot(~ WEATHHER + SEX + INJ_SEV, data=dfdemo[which(dfdemo$REST_USE==&quot;0&quot;),], shade = TRUE, lengend = TRUE)
+# Warning: In mosaicplot.default(table(mf), main = main, ...) :
+#  extra argument &#39;lengend&#39; will be disregarded</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-9-2.png" width="480" /></p>
+</div>
+<div id="mixed-models" class="section level2">
+<h2>Mixed Models</h2>
+<div id="标准回归" class="section level3">
+<h3>标准回归</h3>
+<p>ij_lm = lm(INJ_SEV ~ WEATHHER, data = dfdemo)
+### mixed model</p>
+<pre class="r"><code>library(lme4)
+driver1=dfdemo %&gt;% 
+  filter(VENO == 1)
+
+ij_mixed = lmer(INJ_SEV ~ SEX +AGE+ REST_USE + (1 | CASENUM) , 
+                control = lmerControl(calc.derivs = FALSE),data = dfdemo)
+summary(ij_mixed)
+# Linear mixed model fit by REML [&#39;lmerMod&#39;]
+# Formula: INJ_SEV ~ SEX + AGE + REST_USE + (1 | CASENUM)
+#    Data: dfdemo
+# Control: lmerControl(calc.derivs = FALSE)
+# 
+# REML criterion at convergence: 215.4
+# 
+# Scaled residuals: 
+#     Min      1Q  Median      3Q     Max 
+# -2.7294 -0.4765 -0.3374 -0.1521  3.7619 
+# 
+# Random effects:
+#  Groups   Name        Variance Std.Dev.
+#  CASENUM  (Intercept) 0.0000   0.0000  
+#  Residual             0.4501   0.6709  
+# Number of obs: 100, groups:  CASENUM, 50
+# 
+# Fixed effects:
+#              Estimate Std. Error t value
+# (Intercept)  1.485381   0.341096   4.355
+# SEX         -0.146658   0.135535  -1.082
+# AGE          0.006066   0.003973   1.527
+# REST_USE    -1.342866   0.308489  -4.353
+# 
+# Correlation of Fixed Effects:
+#          (Intr) SEX    AGE   
+# SEX      -0.276              
+# AGE      -0.412  0.097       
+# REST_USE -0.836  0.017 -0.061
+confint(ij_mixed)
+#                    2.5 %      97.5 %
+# .sig01       0.000000000  0.32562476
+# .sigma       0.575783775  0.76014112
+# (Intercept)  0.824010570  2.14675125
+# SEX         -0.409455029  0.11613880
+# AGE         -0.001637712  0.01377028
+# REST_USE    -1.941012131 -0.74472076
+ranef(ij_mixed)$CASENUM %&gt;% head(5)
+#              (Intercept)
+# 201600223633           0
+# 201600361946           0
+# 201600365539           0
+# 201600368470           0
+# 201600489695           0
+coef(ij_mixed)$CASENUM %&gt;% head(5)
+#              (Intercept)        SEX         AGE  REST_USE
+# 201600223633    1.485381 -0.1466581 0.006066286 -1.342866
+# 201600361946    1.485381 -0.1466581 0.006066286 -1.342866
+# 201600365539    1.485381 -0.1466581 0.006066286 -1.342866
+# 201600368470    1.485381 -0.1466581 0.006066286 -1.342866
+# 201600489695    1.485381 -0.1466581 0.006066286 -1.342866
+
+library(merTools)
+predictInterval(ij_mixed) %&gt;% 
+  summarise(across(everything(), mean, na.rm= TRUE))
+#         fit      upr        lwr
+# 1 0.3569892 1.253454 -0.5345119
+
+#REsim(ij_mixed)
+plotREsim(REsim(ij_mixed))</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-10-1.png" width="480" /></p>
+</div>
+</div>
+<div id="mcmcglmn-model-for-inj" class="section level2">
+<h2>MCMCglmn model for INJ</h2>
+<pre class="r"><code>dfdemo
+# # A tibble: 100 x 8
+#         CASENUM WEATHHER  VENO   AGE  AGE1   SEX REST_USE INJ_SEV
+#           &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;
+#  1 201700316865        0     1    49     2     1        1       0
+#  2 201700316865        0     2    16     0     1        1       0
+#  3 201600777740        0     1    18     0     1        1       1
+#  4 201600777740        0     2    38     1     0        1       1
+#  5 201801320571        2     1    71     3     1        1       0
+#  6 201801320571        2     2    64     3     1        1       2
+#  7 201701398622        0     1    27     1     0        1       0
+#  8 201701398622        0     2    54     2     1        1       0
+#  9 201801136328        2     1    18     0     1        1       0
+# 10 201801136328        2     2    28     1     1        1       1
+# # … with 90 more rows
+library(MCMCglmm)
+# Loading required package: coda
+# 
+# Attaching package: &#39;coda&#39;
+# The following object is masked from &#39;package:arm&#39;:
+# 
+#     traceplot
+# Loading required package: ape
+# 
+# Attaching package: &#39;ape&#39;
+# The following object is masked from &#39;package:arm&#39;:
+# 
+#     balance
+prior = list(R = list(V = 1, nu = 0.002), G = list(G1 = list(V = 1, nu = 0.002), G2 = list(V = 1, nu = 0.002)))
+fitmcmc &lt;- MCMCglmm(INJ_SEV ~ SEX + REST_USE, random = ~CASENUM + VENO, 
+                    data = as.data.frame(dfdemo), verbose=FALSE, prior=prior, family=&quot;ordinal&quot;)
+
+diag(autocorr(fitmcmc$VCV)[2,,])
+#     CASENUM        VENO       units 
+#  0.76033319 -0.00102237  0.89738029
+
+#MCMC summary plot for the variance components from model fitmcmc
+plot(fitmcmc$VCV)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-11-1.png" width="480" /></p>
+<pre class="r"><code>
+#The posterior correlation between the parameters is low
+cor(fitmcmc$VCV)
+#             CASENUM         VENO        units
+# CASENUM  1.00000000 -0.011235402 -0.070809177
+# VENO    -0.01123540  1.000000000 -0.003838541
+# units   -0.07080918 -0.003838541  1.000000000
+
+#
+HPDinterval(fitmcmc$VCV)
+#                lower     upper
+# CASENUM 9.241798e-05  21413.12
+# VENO    5.297427e-04 114129.39
+# units   4.185754e+03 329453.60
+# attr(,&quot;Probability&quot;)
+# [1] 0.95
+
+priorb &lt;- prior
+priorb[[2]] &lt;- priorb[[2]][-2]
+fitmcmc2 &lt;- MCMCglmm(INJ_SEV ~ SEX + REST_USE, random = ~CASENUM, 
+                    data = as.data.frame(dfdemo), verbose=FALSE, prior=priorb, family=&quot;ordinal&quot;)
+
+
+fitmcmc$DIC
+# [1] -16725.37</code></pre>
+</div>

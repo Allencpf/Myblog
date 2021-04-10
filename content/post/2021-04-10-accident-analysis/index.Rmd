@@ -1,0 +1,136 @@
+---
+title: accident analysis
+author: Trevor
+date: '2021-04-10'
+slug: accident-analysis
+categories:
+  - Example
+tags: []
+---
+
+
+```{r}
+knitr::opts_chunk$set(comment = "#", collapse = T, 
+                      fig.height = 5, fig.width = 5)
+```
+
+
+```{r message=FALSE, warning=FALSE, paged.print=TRUE}
+library(tidyverse)
+dfdemo <- read_csv("/Users/cpf/Documents/paper/R_programming/Rprocess/mydata/dfdemo.csv")
+dfdemo_wide <- 
+head(dfdemo,5)
+```
+
+```{r}
+dfdemo %>% #按驾驶员1和2计算对应受伤严重的驾驶员个数
+  group_by(VENO) %>% 
+  count(INJ_SEV)
+```
+
+
+```{r}
+library(MASS)
+dfdemo1 <- dfdemo %>% 
+  dplyr::mutate(
+    across(c(SEX,AGE1, REST_USE, WEATHHER,INJ_SEV), as.factor),
+    across(c(INJ_SEV), ~ fct_inseq(., ordered = TRUE))
+  )
+
+fit1 <- polr(INJ_SEV ~ SEX + AGE1 + AGE + REST_USE + WEATHHER ,
+             data = dfdemo1, 
+             method = c("logistic"))
+summary(fit1)
+```
+输出结果得到有序分类Logistic回归模型中截距和回归系数的最大似然估计值，确定回归方程为：
+```{r}
+library(equatiomatic)
+extract_eq(fit1, use_coefs = TRUE)
+```
+### 系数的解释（odds ratio OR）优势比
+
+```{r}
+coef(fit1) %>%  exp()
+```
+* SEX:在其它因素不变的情况下，男性要比女性会增加受伤严重程度向上提高一个级别的概率0.53倍，也就是减少了47%
+* WEAHTER1:在其它因素不变的情况下，雨天受伤严重程度提高一个级别的概率比晴天减少55%。
+### 边际效应
+```{r}
+library(margins)
+me <- marginal_effects(fit1, variables = c("SEX", "AGE", "REST_USE", "WEATHHER"))
+
+me %>%  # 求每一个解释变量的平均边际效应
+  summarise(across(everything(), mean, na.rm = TRUE))
+```
+
+##Logistic回归深度学习
+```{r}
+library(mlr3verse)
+library(nnet)
+
+```
+### 划分训练集测试集
+* 为了保持训练集、测试集的分类因变量数据具有相似的占比，采用分层 重抽样方法，需要设置任务的列角色的分层属性 staratum 为因变量
+* 做留出 (holdout) 重抽样，80% 作为训练集，其余 20% 作为测试集
+* 根据任务对重抽样做实例化，取出训练集索引和测试集索引
+
+## plot
+```{r}
+mosaicplot(~ WEATHHER + SEX + INJ_SEV, data=dfdemo[which(dfdemo$REST_USE=="1"),], shade = TRUE, lengend = TRUE)
+mosaicplot(~ WEATHHER + SEX + INJ_SEV, data=dfdemo[which(dfdemo$REST_USE=="0"),], shade = TRUE, lengend = TRUE)
+
+```
+
+
+
+## Mixed Models
+### 标准回归
+ij_lm = lm(INJ_SEV ~ WEATHHER, data = dfdemo)
+### mixed model
+```{r message=FALSE, warning=FALSE}
+library(lme4)
+driver1=dfdemo %>% 
+  filter(VENO == 1)
+
+ij_mixed = lmer(INJ_SEV ~ SEX +AGE+ REST_USE + (1 | CASENUM) , 
+                control = lmerControl(calc.derivs = FALSE),data = dfdemo)
+summary(ij_mixed)
+confint(ij_mixed)
+ranef(ij_mixed)$CASENUM %>% head(5)
+coef(ij_mixed)$CASENUM %>% head(5)
+
+library(merTools)
+predictInterval(ij_mixed) %>% 
+  summarise(across(everything(), mean, na.rm= TRUE))
+
+#REsim(ij_mixed)
+plotREsim(REsim(ij_mixed))
+```
+
+## MCMCglmn model for INJ
+```{r}
+dfdemo
+library(MCMCglmm)
+prior = list(R = list(V = 1, nu = 0.002), G = list(G1 = list(V = 1, nu = 0.002), G2 = list(V = 1, nu = 0.002)))
+fitmcmc <- MCMCglmm(INJ_SEV ~ SEX + REST_USE, random = ~CASENUM + VENO, 
+                    data = as.data.frame(dfdemo), verbose=FALSE, prior=prior, family="ordinal")
+
+diag(autocorr(fitmcmc$VCV)[2,,])
+
+#MCMC summary plot for the variance components from model fitmcmc
+plot(fitmcmc$VCV)
+
+#The posterior correlation between the parameters is low
+cor(fitmcmc$VCV)
+
+#
+HPDinterval(fitmcmc$VCV)
+
+priorb <- prior
+priorb[[2]] <- priorb[[2]][-2]
+fitmcmc2 <- MCMCglmm(INJ_SEV ~ SEX + REST_USE, random = ~CASENUM, 
+                    data = as.data.frame(dfdemo), verbose=FALSE, prior=priorb, family="ordinal")
+
+
+fitmcmc$DIC
+```
