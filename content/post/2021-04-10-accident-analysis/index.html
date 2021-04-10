@@ -5,7 +5,7 @@ date: '2021-04-10'
 slug: accident-analysis
 categories:
   - Example
-tags: []
+tags: ['data_process']
 ---
 
 <script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
@@ -196,8 +196,8 @@ coef(ij_mixed)$CASENUM %&gt;% head(5)
 library(merTools)
 predictInterval(ij_mixed) %&gt;% 
   summarise(across(everything(), mean, na.rm= TRUE))
-#         fit      upr        lwr
-# 1 0.3569892 1.253454 -0.5345119
+#         fit      upr      lwr
+# 1 0.3638575 1.249937 -0.52145
 
 #REsim(ij_mixed)
 plotREsim(REsim(ij_mixed))</code></pre>
@@ -239,8 +239,8 @@ fitmcmc &lt;- MCMCglmm(INJ_SEV ~ SEX + REST_USE, random = ~CASENUM + VENO,
                     data = as.data.frame(dfdemo), verbose=FALSE, prior=prior, family=&quot;ordinal&quot;)
 
 diag(autocorr(fitmcmc$VCV)[2,,])
-#     CASENUM        VENO       units 
-#  0.76033319 -0.00102237  0.89738029
+#      CASENUM         VENO        units 
+#  0.850507445 -0.002763166  0.932194024
 
 #MCMC summary plot for the variance components from model fitmcmc
 plot(fitmcmc$VCV)</code></pre>
@@ -248,17 +248,17 @@ plot(fitmcmc$VCV)</code></pre>
 <pre class="r"><code>
 #The posterior correlation between the parameters is low
 cor(fitmcmc$VCV)
-#             CASENUM         VENO        units
-# CASENUM  1.00000000 -0.011235402 -0.070809177
-# VENO    -0.01123540  1.000000000 -0.003838541
-# units   -0.07080918 -0.003838541  1.000000000
+#            CASENUM         VENO        units
+# CASENUM  1.0000000 -0.024926802 -0.277493112
+# VENO    -0.0249268  1.000000000  0.004053312
+# units   -0.2774931  0.004053312  1.000000000
 
 #
 HPDinterval(fitmcmc$VCV)
 #                lower     upper
-# CASENUM 9.241798e-05  21413.12
-# VENO    5.297427e-04 114129.39
-# units   4.185754e+03 329453.60
+# CASENUM 0.0002883393 0.3434382
+# VENO    0.0002798060 2.2653277
+# units   0.0003516143 0.9497650
 # attr(,&quot;Probability&quot;)
 # [1] 0.95
 
@@ -269,5 +269,5 @@ fitmcmc2 &lt;- MCMCglmm(INJ_SEV ~ SEX + REST_USE, random = ~CASENUM,
 
 
 fitmcmc$DIC
-# [1] -16725.37</code></pre>
+# [1] 144.2693</code></pre>
 </div>
