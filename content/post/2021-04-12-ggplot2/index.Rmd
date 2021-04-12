@@ -1,0 +1,49 @@
+---
+title: ggplot2概述
+author: Trevor
+date: '2021-04-12'
+slug: ggplot2
+categories: []
+tags:
+  - R
+editor_options: 
+  chunk_output_type: console
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+## 1.ggplot2基本逻辑
+ggplot2 的作图一般步骤为:
+
+* 准备数据，一般为数据框，且一般为长表，即每个观测时间占一行，每个观测变量占一列。
+* 将数据输入到 ggplot() 函数中，并指定参与作图的每个变量分别映射到哪些图形特性，比如映射为 x 坐标、
+y 坐标、颜色、形状等。这些映射称为 aesthetic mappings。
+* 选择一个合适的图形类型，函数名以 geom_ 开头，如 geom_point() 表示散点图,geom_bar()为柱状图。图形类型简称为 geom。
+将 ggplot() 部分与 geom_xxx() 部分用+连接。到此已经可以作图，下面的步骤是进一步的细化设定。
+* 设定适当的坐标系统，如将纵坐标设为百分比显示等。仍用+连接。
+* 设定标题和图例位置等，如 labs()。仍用+连接。
+
+## 2.基本流程
+```{r}
+## 准备数据，一般为dataframe格式，且为长表，每个观测变量占一列
+library(tidyverse)
+dfdemo <- read_csv("/Users/cpf/Documents/paper/R_programming/Rprocess/mydata/dfdemo.csv")
+data("TravelMode", package = "AER")
+head(dfdemo)
+ggplot(data = dfdemo)
+## 构建映射，将所期望的列变量名映射到x，y上
+ggplot(data = dfdemo, mapping = aes(x = AGE, y = INJ_SEV, color = VENO))
+## 在该映射下绘制散点图
+ggplot(data = dfdemo, mapping = aes(x = AGE, y = INJ_SEV, color = VENO)) +
+  geom_point(color = "red") + 
+  geom_smooth()
+```
+
+
+
+

@@ -1,0 +1,224 @@
+---
+title: McMCglmn
+author: Trevor
+date: '2021-04-12'
+slug: mcmcglmn
+categories:
+  - Models
+tags:
+  - R
+  - regression
+editor_options: 
+  chunk_output_type: console
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<div id="导入数据和package" class="section level2">
+<h2>1.导入数据和package</h2>
+<pre class="r"><code>library(&quot;MCMCglmm&quot;)
+data(&quot;BTdata&quot;)
+# tarsus 前足长度；back 背部颜色； dam 遗传母亲
+head(BTdata)</code></pre>
+<pre><code>##        tarsus       back  animal     dam fosternest  hatchdate  sex
+## 1 -1.89229718  1.1464212 R187142 R187557      F2102 -0.6874021  Fem
+## 2  1.13610981 -0.7596521 R187154 R187559      F1902 -0.6874021 Male
+## 3  0.98468946  0.1449373 R187341 R187568       A602 -0.4279814 Male
+## 4  0.37900806  0.2555847 R046169 R187518      A1302 -1.4656641 Male
+## 5 -0.07525299 -0.3006992 R046161 R187528      A2602 -1.4656641  Fem
+## 6 -1.13519543  1.5577219 R187409 R187945      C2302  0.3502805  Fem</code></pre>
+<pre class="r"><code># 3列数据帧，第一列中包含一个人的标识符（动物），第二列和第三列中包含其父母的标识符。
+data(&quot;BTped&quot;)
+head(BTped)</code></pre>
+<pre><code>##    animal  dam sire
+## 1 R187557 &lt;NA&gt; &lt;NA&gt;
+## 2 R187559 &lt;NA&gt; &lt;NA&gt;
+## 3 R187568 &lt;NA&gt; &lt;NA&gt;
+## 4 R187518 &lt;NA&gt; &lt;NA&gt;
+## 5 R187528 &lt;NA&gt; &lt;NA&gt;
+## 6 R187945 &lt;NA&gt; &lt;NA&gt;</code></pre>
+</div>
+<div id="模型建立" class="section level2">
+<h2>2. 模型建立</h2>
+<p>为了估算不同变异源的tarsus 与back 之间的协方差（这两个是连续因变量），为达到这一目的，我们拟合了模型：</p>
+<pre class="r"><code>prior = list(R = list(V = diag(2)/3, n=2),
+             G = list(G1 = list(V = diag(2)/3, n = 2),
+                      G2 = list(V = diag(2)/3, n = 2)))
+m1&lt;-MCMCglmm(cbind(tarsus, back) ~ trait:sex + trait:hatchdate - 1,
+             random = ~ us(trait):animal + us(trait):fosternest,pr = TRUE,
+             rcov = ~ us(trait):units, prior = prior,
+             family = rep(&quot;gaussian&quot;, 2),
+             nitt = 20000, burnin = 10000, thin=25, data = BTdata, pedigree=BTped)</code></pre>
+<pre><code>## 
+##                        MCMC iteration = 0
+## 
+##                        MCMC iteration = 1000
+## 
+##                        MCMC iteration = 2000
+## 
+##                        MCMC iteration = 3000
+## 
+##                        MCMC iteration = 4000
+## 
+##                        MCMC iteration = 5000
+## 
+##                        MCMC iteration = 6000
+## 
+##                        MCMC iteration = 7000
+## 
+##                        MCMC iteration = 8000
+## 
+##                        MCMC iteration = 9000
+## 
+##                        MCMC iteration = 10000
+## 
+##                        MCMC iteration = 11000
+## 
+##                        MCMC iteration = 12000
+## 
+##                        MCMC iteration = 13000
+## 
+##                        MCMC iteration = 14000
+## 
+##                        MCMC iteration = 15000
+## 
+##                        MCMC iteration = 16000
+## 
+##                        MCMC iteration = 17000
+## 
+##                        MCMC iteration = 18000
+## 
+##                        MCMC iteration = 19000
+## 
+##                        MCMC iteration = 20000</code></pre>
+<p>次模型主要包括四个部分</p>
+<ul>
+<li>response variable 这里是tarsus 和 back</li>
+<li>fixed effects (fixed) 固定效应<br />
+</li>
+<li>the distribution of the response variables (family) 这里是 rep(“gaussian”, 2)</li>
+<li>the random effects and associated G-structure (random), and the R- structure (rcov).</li>
+</ul>
+<div id="fixed-response-variables-and-fixed-effects" class="section level3">
+<h3>2.1 fixed: Response variables and fixed effects</h3>
+<p>固定参数遵循标准R公式语言，尽管可以将多个响应作为单个向量传递，但在许多情况下使用cbind将它们作为矩阵传递可能更容易。例如，</p>
+<p><strong>fixed = cbind(tarsus, back) ~ trait:sex + trait:hatchdate - 1</strong></p>
+<p>本文定义了一个具有变量tarsus和back的双变量模型。对于多响应模型，通常使用保留变量特征和单位，它们分别索引响应矩阵的列和行。要了解这些变量的用法，可以更轻松地将响应视为逐列堆叠：通过将<strong>trait</strong>作为固定效应进行拟合，我们允许两个响应具有不同的means，并通过拟合诸如<strong>trait：hatchdate</strong>之类的交互作用，我们允许在剖面线上使用不同的回归斜率we allow different regression slopes of the traits on hatchdate。</p>
+</div>
+<div id="family-response-variable-distributions" class="section level3">
+<h3>2.2 family: Response variable distributions</h3>
+<p>对于上述模型，必须在family参数中指定两个分布，并且我们假设高斯分布具有身份链接功能identity link functions for both，可用于以下两个方面：</p>
+<p><strong>family = c(“gaussian”, “gaussian”)</strong></p>
+<p>某些分布比线性预测变量需要更多的数据列。例如，被检查的censored数据作为两列传递，第一列指定数据可以采用的最小值，第二列指定数据可以采用的最大值。但是，只有单个线性预测变量（与未经审查uncensored但未观察到unobserved的数据相关联）才适合该分布，应该记住，在这种情况下，特征trait实际上是索引线性预测变量，而不是数据data。</p>
+<p>另一个示例是二项式分布binomial ditribution（在族参数family argument中指定为“multinomial2”），通常指定为成功和失败的两列响应，但由对数优势比log odds ratio的单个线性预测变量进行参数化。</p>
+<p>此外，某些分布实际上比数据列具有更多的线性预测变量。例如，零膨胀的泊松具有两个线性预测变量；一种用于预测零通胀，另一种用于预测泊松计数。同样，分类数据虽然作为单个响应传递，但被视为具有J-1个线性预测变量（其中J是类别数）的多项式响应。同样，应该记住，在这种情况下，几个级别的特征可能与同一数据列的不同方面相关联。</p>
+</div>
+<div id="random-random-effects-and-g" class="section level3">
+<h3>2.3 random: Random effects and G</h3>
+<p>如公式7所示，简单的方差结构也可以指定为标准R公式：
+<span class="math display">\[random = ~ fosternest + ..\]</span>
+尽管这通常是不合适的，尤其是对于多响应模型，在该模型中隐式假设两个特征的最强作用是相同的especially for multi-response models where the implicit assumption has been made that <strong>fosternest</strong> effects are identical for both <strong>traits</strong>。</p>
+<p>对角元素是fosternest 对于tarsus length 和back colr 的方差成分variance components，非对角元素off-diagonal elements是对fosternest effects 和两种traists之间的协方差。上面的规范在没有交互without an interaction的情况下强制采用以下结构：</p>
+<p><span class="math display">\[ V_f = \begin{bmatrix}
+\sigma_f^2   &amp; \sigma_f^2      \\
+\sigma_f^2 &amp; \sigma_f^2 \\
+\end{bmatrix}\]</span></p>
+<p>所有部分components都必须相同。就像我们对固定效果所做的那样，很自然地与<strong>trait</strong>形成互动,尽管有三种可能的方法可以做到这一点。最直接的交互特征：<strong>trait:fosternest</strong>尽管仍旧适合两个traits中的一个方差成分，但最直接的假设是个体效应在两个特征trait之间是独立的：假设个体效应在特征之间是独立的：</p>
+<p><span class="math display">\[ V_f = \begin{bmatrix}
+\sigma_f^2   &amp; 0     \\
+0            &amp; \sigma_f^2 \\
+\end{bmatrix}\]</span>
+更多有用的interactions can be formed using the <strong>idh() and us()</strong> functions. 例如：
+<strong>idh(trait):fosternest</strong> 拟合特征之间的异质方差heterogeneous variances：
+<span class="math display">\[ V_f = \begin{bmatrix}
+\sigma_{f:tarsus}^2   &amp; 0     \\
+0            &amp; \sigma_{f:back}^2 \\
+\end{bmatrix}\]</span>
+尽管仍然假设这两个特征在fosternest层次上是独立的。The specification 设定<strong>us（trait）：fosternest</strong>符合完全参数化的矩阵，该矩阵允许跨特征进行协方差：
+<span class="math display">\[ V_f = \begin{bmatrix}
+\sigma_{f:tarsus}^2   &amp; \sigma_{f:tarsus,back}      \\
+\sigma_{f:back,tarsus}            &amp; \sigma_{f:back}^2 \\
+\end{bmatrix}\]</span>
+由于本次实验设计时检测两个response variables 之间的协方差，所以completely parametrized (co) variance matrices are specified.
+<strong>random = ~ us(trait):animal + us(trait):fosternest</strong>
+对于具有谱系pedigree或系统发育phylogenetic effects 影响的模型，随机影响向量需要与逆关系矩阵关联<span class="math inline">\(\Lambda^{-1}\)</span>.这个矩阵通过<strong>pedigree</strong>argument of MCMCglmm.</p>
+<p>像随机回归random regression models 模型一样，也可以拟合分类别变量和连续变量之间的随机相互作用。例如，可以指定一个拟合了协方差项的随机截距-斜率模型random intercept-slope model with a covariance term fitted could be specified：
+<strong>random = ~ us(1+age):individual</strong>
+或对于高阶多项式higher order polynomials，可以使用poly函数：
+<strong>random = ~ us(1+poly(age,2)):individual</strong></p>
+</div>
+<div id="rcov-residual-variance-structure-r-残差方差结构r" class="section level3">
+<h3>2.4 rcov: Residual variance structure R 残差方差结构R</h3>
+<p>R-结构可以与G-结构相同的方式进行参数化parametrized，尽管目前不可能直接求和。但是，与G结构不同，重要的是要指定残差模型，该残差模型应允许每个线性预测变量具有唯一的残差unique residual。对于在特征trait和单位units之间形成相互作用的多响应multi-response模型，可以满足该条件，并且与G结构一样，可以考虑各种类型的相互作用。同样，我们将使用完全参数化的协方差矩阵：
+<strong>rcov = ~ us(trait):units</strong></p>
+</div>
+<div id="prior-response-variables-and-fixed-effects" class="section level3">
+<h3>2.5 prior: Response variables and fixed effects</h3>
+<p>如果未定义，将使用不合适的default priors，这可能会导致推理inferential和数字问题numerical problems。先验规范通过参数Prior传递给MCMCglmm，该参数采用三个元素的列表，这些元素指定了固定效果（B），G结构（G）和R结构（R）的先验条件。</p>
+<p>对于固定效果,可以通过均值向量<span class="math inline">\(mu(\beta_0)\)</span>和作为B的列表元素传递的（协）方差矩阵<span class="math inline">\(V（B）\)</span>来指定多元正态先验分布。默认值具有零均值向量和具有大方差（1e 10）的对角方差矩阵diagonal variance matrix。</p>
+<p>对于非参数扩展模型non-parameter expanded models，假定参数（协）方差矩阵具有（条件）inverse-Wishart先验分布，并且方差结构每个组成部分的单个元素采用参数<span class="math inline">\(V\)</span>，<span class="math inline">\(n\)</span>和<span class="math inline">\(fix\)</span>来指定期望值（协）方差矩阵的极限，自由度参数和要进行条件划分的部分。以上模型的差异结构先验规格为</p>
+<p>其中方差结构的所有三个组成部分的预期协方差矩阵是对角矩阵，这意味着tarsus and back之间具有先验独立性。在分析之前，对特征traits进行缩放以使其具有单位方差unit varance，因此该规范暗示了先前的信念，即总方差在所有三个terms之间均分。术语“fix”未指定，因此所有方差参数均已估算。但是，对于某些类型的模型，能够将子矩阵sub-matrices固定为某些值而不估计它们是有利的。</p>
+</div>
+</div>
+<div id="mcmc-output" class="section level2">
+<h2>3. MCMC output</h2>
+<p>该模型运行了60,000次iteration，with a burn-in phase of 10,000，稀疏间隔thinning interval为25。MCMCglmm返回包含以下元素的列表：</p>
+<ul>
+<li>Sol 位置效应location effects的后验分布（以及序数模型的分界点）</li>
+<li>VCV （协）方差矩阵的后验分布</li>
+<li>Liab 潜在变量latent variables的后验分布</li>
+<li>Deviance 偏差</li>
+<li>DIC Deviance Information Criterion 偏差信息标准</li>
+</ul>
+<p>来自后验分布的样本存储为<em>mcmc</em>对象，可以使用<em>coda</em>package对其进行汇总和可视化.Sol元素包含固定效应<span class="math inline">\(\beta\)</span>，if <em>pr = TRUE</em>，则还包含随机效应<span class="math inline">\(u\)</span>。元素VCV包含按列堆叠的参数（协）方差矩阵，如果pl = TRUE，则Liab包含潜在变量latent variables <span class="math inline">\(l\)</span>的后验分布。Deviance包含每次存储的迭代中的偏差，而DIC包含在所有迭代中计算出的偏差信息标准（Spiegelhalter等，2002）。</p>
+<pre class="r"><code>summary(m1)</code></pre>
+<pre><code>## 
+##  Iterations = 10001:19976
+##  Thinning interval  = 25
+##  Sample size  = 400 
+## 
+##  DIC: 4043.708 
+## 
+##  G-structure:  ~us(trait):animal
+## 
+##                                post.mean l-95% CI u-95% CI eff.samp
+## traittarsus:traittarsus.animal    0.4553  0.27866 0.667518   114.86
+## traitback:traittarsus.animal     -0.1038 -0.20740 0.006613   107.27
+## traittarsus:traitback.animal     -0.1038 -0.20740 0.006613   107.27
+## traitback:traitback.animal        0.1747  0.08141 0.290278    84.93
+## 
+##                ~us(trait):fosternest
+## 
+##                                    post.mean  l-95% CI u-95% CI eff.samp
+## traittarsus:traittarsus.fosternest   0.10712 6.150e-02  0.16427      400
+## traitback:traittarsus.fosternest     0.04719 5.215e-05  0.09149      400
+## traittarsus:traitback.fosternest     0.04719 5.215e-05  0.09149      400
+## traitback:traitback.fosternest       0.14046 7.281e-02  0.21188      400
+## 
+##  R-structure:  ~us(trait):units
+## 
+##                               post.mean l-95% CI u-95% CI eff.samp
+## traittarsus:traittarsus.units   0.33809  0.21011  0.44328    164.0
+## traitback:traittarsus.units     0.01877 -0.05672  0.09915    143.1
+## traittarsus:traitback.units     0.01877 -0.05672  0.09915    143.1
+## traitback:traitback.units       0.70984  0.61302  0.79937    167.0
+## 
+##  Location effects: cbind(tarsus, back) ~ trait:sex + trait:hatchdate - 1 
+## 
+##                        post.mean   l-95% CI   u-95% CI eff.samp  pMCMC   
+## traittarsus:sexFem    -0.4052259 -0.5836076 -0.2740057    296.5 &lt;0.003 **
+## traitback:sexFem      -0.0074674 -0.1379755  0.1174429    371.0  0.925   
+## traittarsus:sexMale    0.3655342  0.2509299  0.5077307    400.0 &lt;0.003 **
+## traitback:sexMale      0.0001402 -0.1293778  0.1405063    400.0  0.990   
+## traittarsus:sexUNK    -0.1648495 -0.4180403  0.1044853    400.0  0.250   
+## traitback:sexUNK       0.1187327 -0.1531585  0.3920648    334.5  0.380   
+## traittarsus:hatchdate -0.0450203 -0.1776030  0.0689023    541.8  0.475   
+## traitback:hatchdate   -0.0883704 -0.2022671  0.0089985    400.0  0.090 . 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>mean(predict.MCMCglmm(m1))</code></pre>
+<pre><code>## [1] -0.004170861</code></pre>
+<pre class="r"><code>plot(m1)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-1.png" width="672" /><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-2.png" width="672" /><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-3.png" width="672" /><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-4.png" width="672" /><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-5.png" width="672" /><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-6.png" width="672" /></p>
+</div>

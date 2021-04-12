@@ -1,0 +1,152 @@
+---
+title: McMCglmn
+author: Trevor
+date: '2021-04-12'
+slug: mcmcglmn
+categories:
+  - Models
+tags:
+  - R
+  - regression
+editor_options: 
+  chunk_output_type: console
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+## 1.导入数据和package
+```{r}
+library("MCMCglmm")
+data("BTdata")
+# tarsus 前足长度；back 背部颜色； dam 遗传母亲
+head(BTdata)
+# 3列数据帧，第一列中包含一个人的标识符（动物），第二列和第三列中包含其父母的标识符。
+data("BTped")
+head(BTped)
+```
+## 2. 模型建立
+为了估算不同变异源的tarsus 与back 之间的协方差（这两个是连续因变量），为达到这一目的，我们拟合了模型：
+```{r}
+prior = list(R = list(V = diag(2)/3, n=2),
+             G = list(G1 = list(V = diag(2)/3, n = 2),
+                      G2 = list(V = diag(2)/3, n = 2)))
+m1<-MCMCglmm(cbind(tarsus, back) ~ trait:sex + trait:hatchdate - 1,
+             random = ~ us(trait):animal + us(trait):fosternest,pr = TRUE,
+             rcov = ~ us(trait):units, prior = prior,
+             family = rep("gaussian", 2),
+             nitt = 20000, burnin = 10000, thin=25, data = BTdata, pedigree=BTped)
+```
+次模型主要包括四个部分
+
+* response variable           这里是tarsus 和 back
+* fixed effects (fixed) 固定效应        
+* the distribution of the response variables (family)  这里是 rep("gaussian", 2) 
+* the random effects and associated G-structure (random), and the R- structure (rcov). 
+
+### 2.1 fixed: Response variables and fixed effects
+固定参数遵循标准R公式语言，尽管可以将多个响应作为单个向量传递，但在许多情况下使用cbind将它们作为矩阵传递可能更容易。例如，
+
+**fixed = cbind(tarsus, back) ~ trait:sex + trait:hatchdate - 1**
+
+本文定义了一个具有变量tarsus和back的双变量模型。对于多响应模型，通常使用保留变量特征和单位，它们分别索引响应矩阵的列和行。要了解这些变量的用法，可以更轻松地将响应视为逐列堆叠：通过将**trait**作为固定效应进行拟合，我们允许两个响应具有不同的means，并通过拟合诸如**trait：hatchdate**之类的交互作用，我们允许在剖面线上使用不同的回归斜率we allow different regression slopes of the traits on hatchdate。
+
+### 2.2 family: Response variable distributions
+对于上述模型，必须在family参数中指定两个分布，并且我们假设高斯分布具有身份链接功能identity link functions for both，可用于以下两个方面：
+
+**family = c("gaussian", "gaussian")**
+
+某些分布比线性预测变量需要更多的数据列。例如，被检查的censored数据作为两列传递，第一列指定数据可以采用的最小值，第二列指定数据可以采用的最大值。但是，只有单个线性预测变量（与未经审查uncensored但未观察到unobserved的数据相关联）才适合该分布，应该记住，在这种情况下，特征trait实际上是索引线性预测变量，而不是数据data。
+
+另一个示例是二项式分布binomial ditribution（在族参数family argument中指定为“multinomial2”），通常指定为成功和失败的两列响应，但由对数优势比log odds ratio的单个线性预测变量进行参数化。
+
+此外，某些分布实际上比数据列具有更多的线性预测变量。例如，零膨胀的泊松具有两个线性预测变量；一种用于预测零通胀，另一种用于预测泊松计数。同样，分类数据虽然作为单个响应传递，但被视为具有J-1个线性预测变量（其中J是类别数）的多项式响应。同样，应该记住，在这种情况下，几个级别的特征可能与同一数据列的不同方面相关联。
+
+### 2.3 random: Random effects and G
+如公式7所示，简单的方差结构也可以指定为标准R公式：
+$$random = ~ fosternest + ..$$
+尽管这通常是不合适的，尤其是对于多响应模型，在该模型中隐式假设两个特征的最强作用是相同的especially for multi-response models where the implicit assumption has been made that **fosternest** effects are identical for both **traits**。
+
+
+对角元素是fosternest 对于tarsus length 和back colr 的方差成分variance components，非对角元素off-diagonal elements是对fosternest effects 和两种traists之间的协方差。上面的规范在没有交互without an interaction的情况下强制采用以下结构：
+
+$$ V_f = \begin{bmatrix}
+\sigma_f^2   & \sigma_f^2      \\
+\sigma_f^2 & \sigma_f^2 \\
+\end{bmatrix}$$
+
+所有部分components都必须相同。就像我们对固定效果所做的那样，很自然地与**trait**形成互动,尽管有三种可能的方法可以做到这一点。最直接的交互特征：**trait:fosternest**尽管仍旧适合两个traits中的一个方差成分，但最直接的假设是个体效应在两个特征trait之间是独立的：假设个体效应在特征之间是独立的：
+
+$$ V_f = \begin{bmatrix}
+\sigma_f^2   & 0     \\
+0            & \sigma_f^2 \\
+\end{bmatrix}$$
+更多有用的interactions can be formed using the **idh() and us()** functions. 例如：
+**idh(trait):fosternest** 拟合特征之间的异质方差heterogeneous variances：
+$$ V_f = \begin{bmatrix}
+\sigma_{f:tarsus}^2   & 0     \\
+0            & \sigma_{f:back}^2 \\
+\end{bmatrix}$$
+尽管仍然假设这两个特征在fosternest层次上是独立的。The specification 设定**us（trait）：fosternest**符合完全参数化的矩阵，该矩阵允许跨特征进行协方差：
+$$ V_f = \begin{bmatrix}
+\sigma_{f:tarsus}^2   & \sigma_{f:tarsus,back}      \\
+\sigma_{f:back,tarsus}            & \sigma_{f:back}^2 \\
+\end{bmatrix}$$
+由于本次实验设计时检测两个response variables 之间的协方差，所以completely parametrized (co) variance matrices are specified.
+**random = ~ us(trait):animal + us(trait):fosternest**
+对于具有谱系pedigree或系统发育phylogenetic effects 影响的模型，随机影响向量需要与逆关系矩阵关联$\Lambda^{-1}$.这个矩阵通过**pedigree**argument of MCMCglmm. 
+
+像随机回归random regression models 模型一样，也可以拟合分类别变量和连续变量之间的随机相互作用。例如，可以指定一个拟合了协方差项的随机截距-斜率模型random intercept-slope model with a covariance term fitted could be specified：
+**random = ~ us(1+age):individual**
+或对于高阶多项式higher order polynomials，可以使用poly函数：
+**random = ~ us(1+poly(age,2)):individual**
+
+
+### 2.4 rcov: Residual variance structure R 残差方差结构R
+R-结构可以与G-结构相同的方式进行参数化parametrized，尽管目前不可能直接求和。但是，与G结构不同，重要的是要指定残差模型，该残差模型应允许每个线性预测变量具有唯一的残差unique residual。对于在特征trait和单位units之间形成相互作用的多响应multi-response模型，可以满足该条件，并且与G结构一样，可以考虑各种类型的相互作用。同样，我们将使用完全参数化的协方差矩阵：
+**rcov = ~ us(trait):units**
+
+### 2.5 prior: Response variables and fixed effects
+如果未定义，将使用不合适的default priors，这可能会导致推理inferential和数字问题numerical problems。先验规范通过参数Prior传递给MCMCglmm，该参数采用三个元素的列表，这些元素指定了固定效果（B），G结构（G）和R结构（R）的先验条件。
+
+对于固定效果,可以通过均值向量$mu(\beta_0)$和作为B的列表元素传递的（协）方差矩阵$V（B）$来指定多元正态先验分布。默认值具有零均值向量和具有大方差（1e 10）的对角方差矩阵diagonal variance matrix。
+
+对于非参数扩展模型non-parameter expanded models，假定参数（协）方差矩阵具有（条件）inverse-Wishart先验分布，并且方差结构每个组成部分的单个元素采用参数$V$，$n$和$fix$来指定期望值（协）方差矩阵的极限，自由度参数和要进行条件划分的部分。以上模型的差异结构先验规格为
+
+其中方差结构的所有三个组成部分的预期协方差矩阵是对角矩阵，这意味着tarsus and back之间具有先验独立性。在分析之前，对特征traits进行缩放以使其具有单位方差unit varance，因此该规范暗示了先前的信念，即总方差在所有三个terms之间均分。术语“fix”未指定，因此所有方差参数均已估算。但是，对于某些类型的模型，能够将子矩阵sub-matrices固定为某些值而不估计它们是有利的。
+
+## 3. MCMC output
+该模型运行了60,000次iteration，with a burn-in phase of 10,000，稀疏间隔thinning interval为25。MCMCglmm返回包含以下元素的列表：
+
+* Sol 位置效应location effects的后验分布（以及序数模型的分界点）
+* VCV （协）方差矩阵的后验分布
+* Liab 潜在变量latent variables的后验分布
+* Deviance 偏差
+* DIC Deviance Information Criterion 偏差信息标准
+
+来自后验分布的样本存储为*mcmc*对象，可以使用*coda*package对其进行汇总和可视化.Sol元素包含固定效应$\beta$，if *pr = TRUE*，则还包含随机效应$u$。元素VCV包含按列堆叠的参数（协）方差矩阵，如果pl = TRUE，则Liab包含潜在变量latent variables $l$的后验分布。Deviance包含每次存储的迭代中的偏差，而DIC包含在所有迭代中计算出的偏差信息标准（Spiegelhalter等，2002）。
+
+```{r}
+summary(m1)
+mean(predict.MCMCglmm(m1))
+plot(m1)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -30,7 +30,7 @@ menu:
 
 params:
   description: "A website built through Hugo and blogdown."
-  footer: "&copy; [Trevor](https://github.com/Allencpf) 2021 -- 2025 | [Github](https://github.com/Allencpf) | [知乎](https://github.com/Allencpf)"
+  footer: "&copy; [Trevor](https://github.com/Allencpf) 2021 -- 2025 | [Github](https://github.com/Allencpf) | [知乎](https://www.zhihu.com/people/xiao-yu-70-80-71)"
 
 markup:
   goldmark:

@@ -7,7 +7,13 @@ categories:
   - Example
 tags: ['data_process']
 ---
-
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+```
 
 ```{r}
 knitr::opts_chunk$set(comment = "#", collapse = T, 
