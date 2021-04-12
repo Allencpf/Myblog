@@ -1,0 +1,46 @@
+---
+title: R用ggplot2画百分比柱状图
+author: Trevor
+date: '2021-04-12'
+slug: r-ggplot2
+categories: 
+  - Example
+tags: ['R']
+#output: md_document 
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+## 1.导入数据
+```{r}
+library(tidyverse)
+dfdemo <- read_csv("/Users/cpf/Documents/paper/R_programming/Rprocess/mydata/dfdemo.csv")
+head(dfdemo)
+# 根据天气和事故严重程度做分组计数
+group = dfdemo %>% 
+  count(WEATHHER, INJ_SEV)
+group
+```
+## 2. 用ggplot2画百分比柱状图
+```{r}
+## 添加字体
+library(showtext)
+## 为了使ggplot中有中文字体，可根据自己电脑里字体的位置自行添加。
+font_add("kt", "/Users/cpf/Library/Fonts/楷体_GB2312.ttf") 
+showtext_auto()
+# stacked + percent
+group %>% 
+  drop_na() %>%  #去掉所有空值，避免出错
+  ggplot(aes(fill=INJ_SEV, y= n, x = WEATHHER)) + 
+  geom_bar(position="fill", stat = "identity") +
+  scale_y_continuous(labels = scales::percent) + #纵坐标变为百分比
+  labs(y = "受伤严重程度") +
+  theme_gray()
+```
+
+

@@ -1,0 +1,62 @@
+---
+title: R用ggplot2画百分比柱状图
+author: Trevor
+date: '2021-04-12'
+slug: r-ggplot2
+categories: 
+  - Example
+tags: ['R']
+#output: md_document 
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<div id="导入数据" class="section level2">
+<h2>1.导入数据</h2>
+<pre class="r"><code>library(tidyverse)
+dfdemo &lt;- read_csv(&quot;/Users/cpf/Documents/paper/R_programming/Rprocess/mydata/dfdemo.csv&quot;)
+head(dfdemo)</code></pre>
+<pre><code>## # A tibble: 6 x 8
+##        CASENUM WEATHHER  VENO   AGE  AGE1   SEX REST_USE INJ_SEV
+##          &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;
+## 1 201700316865        0     1    49     2     1        1       0
+## 2 201700316865        0     2    16     0     1        1       0
+## 3 201600777740        0     1    18     0     1        1       1
+## 4 201600777740        0     2    38     1     0        1       1
+## 5 201801320571        2     1    71     3     1        1       0
+## 6 201801320571        2     2    64     3     1        1       2</code></pre>
+<pre class="r"><code># 根据天气和事故严重程度做分组计数
+group = dfdemo %&gt;% 
+  count(WEATHHER, INJ_SEV)
+group</code></pre>
+<pre><code>## # A tibble: 9 x 3
+##   WEATHHER INJ_SEV     n
+##      &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt;
+## 1        0       0    59
+## 2        0       1    13
+## 3        0       2     5
+## 4        0       3     3
+## 5        1       0     7
+## 6        1       1     1
+## 7        2       0    10
+## 8        2       1     1
+## 9        2       2     1</code></pre>
+</div>
+<div id="用ggplot2画百分比柱状图" class="section level2">
+<h2>2. 用ggplot2画百分比柱状图</h2>
+<pre class="r"><code>## 添加字体
+library(showtext)
+## 为了使ggplot中有中文字体，可根据自己电脑里字体的位置自行添加。
+font_add(&quot;kt&quot;, &quot;/Users/cpf/Library/Fonts/楷体_GB2312.ttf&quot;) 
+showtext_auto()
+# stacked + percent
+group %&gt;% 
+  drop_na() %&gt;%  #去掉所有空值，避免出错
+  ggplot(aes(fill=INJ_SEV, y= n, x = WEATHHER)) + 
+  geom_bar(position=&quot;fill&quot;, stat = &quot;identity&quot;) +
+  scale_y_continuous(labels = scales::percent) + #纵坐标变为百分比
+  labs(y = &quot;受伤严重程度&quot;) +
+  theme_gray()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+</div>
