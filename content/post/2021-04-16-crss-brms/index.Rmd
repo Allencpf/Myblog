@@ -1,0 +1,28 @@
+---
+title: crss_brms
+author: R package build
+date: '2021-04-16'
+slug: crss-brms
+categories:
+  - Models
+tags: []
+editor_options: 
+  chunk_output_type: console
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+
+```{r}
+library(tidyverse)
+library(brms)
+library(sjmisc) # rec函数，分类
+
+crss
+```
+

@@ -1,0 +1,44 @@
+---
+title: myMCMCglmm
+author: Trevor
+date: '2021-04-13'
+slug: mymcmcglmm
+categories:
+  - Models
+tags:
+  - R
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<pre class="r"><code>library(tidyverse)
+fars_w &lt;- read_csv(&quot;/Users/cpf/OneDrive - bjtu.edu.cn/Data/Modified/NHTSAdata/data/Output_fars/Routput_20210411_/df_pvawide.csv&quot;)
+head(fars_w)</code></pre>
+<pre><code>## # A tibble: 6 x 42
+##   YRST_CASE PER_NO  HOUR MAN_COLL LGT_COND VE_FORMS DAY_WEEK TYP_INT WEATHER2
+##       &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
+## 1 201610009      1     5        1        1        2        0       1        0
+## 2 201610011      1     8        1        0        2        0       2        0
+## 3 201610014      1     0        1        2        2        1       1        1
+## 4 201610015      1     7        1        0        2        1       1        1
+## 5 201610020      1     1        2        1        2        0       2        1
+## 6 201610021      1     7        2        0        2        0       2        0
+## # … with 33 more variables: WEATHER4 &lt;dbl&gt;, BODY_TYP_1 &lt;dbl&gt;, BODY_TYP_2 &lt;dbl&gt;,
+## #   MOD_YEAR_1 &lt;dbl&gt;, MOD_YEAR_2 &lt;dbl&gt;, ROLLOVER_1 &lt;dbl&gt;, ROLLOVER_2 &lt;dbl&gt;,
+## #   IMPACT1_1 &lt;dbl&gt;, IMPACT1_2 &lt;dbl&gt;, AGE4_1 &lt;dbl&gt;, AGE4_2 &lt;dbl&gt;, SEX_1 &lt;dbl&gt;,
+## #   SEX_2 &lt;dbl&gt;, PER_TYP_1 &lt;dbl&gt;, PER_TYP_2 &lt;dbl&gt;, INJ_SEV_1 &lt;dbl&gt;,
+## #   INJ_SEV_2 &lt;dbl&gt;, REST_USE_1 &lt;dbl&gt;, REST_USE_2 &lt;dbl&gt;, AIR_BAG_1 &lt;dbl&gt;,
+## #   AIR_BAG_2 &lt;dbl&gt;, EJECTION_1 &lt;dbl&gt;, EJECTION_2 &lt;dbl&gt;, DRINKING_1 &lt;dbl&gt;,
+## #   DRINKING_2 &lt;dbl&gt;, DRUGS_1 &lt;dbl&gt;, DRUGS_2 &lt;dbl&gt;, TRAV_SP_1 &lt;lgl&gt;,
+## #   TRAV_SP_2 &lt;lgl&gt;, VSPD_LIM_1 &lt;lgl&gt;, VSPD_LIM_2 &lt;lgl&gt;, DR_DRINK_1 &lt;lgl&gt;,
+## #   DR_DRINK_2 &lt;lgl&gt;</code></pre>
+<pre class="r"><code># fprior = list(R = list(V = diag(2)/3, n=2),
+#              G = list(G1 = list(V = diag(2)/3, n = 2),
+#                       G2 = list(V = diag(2)/3, n = 2)))
+# fitfm&lt;-MCMCglmm(cbind(INJ_SEV, back) ~ trait:sex + trait:hatchdate - 1,
+#              random = ~ us(trait):animal + us(trait):fosternest,pr = TRUE,
+#              rcov = ~ us(trait):units, prior = prior,
+#              family = rep(&quot;gaussian&quot;, 2),
+#              nitt = 20000, burnin = 10000, thin=25, data = BTdata, pedigree=BTped)</code></pre>
+<p>sdkjlfdfj</p>

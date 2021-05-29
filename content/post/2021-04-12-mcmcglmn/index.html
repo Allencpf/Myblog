@@ -1,5 +1,5 @@
 ---
-title: McMCglmn
+title: McMCglmm
 author: Trevor
 date: '2021-04-12'
 slug: mcmcglmn
@@ -178,47 +178,47 @@ m1&lt;-MCMCglmm(cbind(tarsus, back) ~ trait:sex + trait:hatchdate - 1,
 ##  Thinning interval  = 25
 ##  Sample size  = 400 
 ## 
-##  DIC: 4043.708 
+##  DIC: 4047.459 
 ## 
 ##  G-structure:  ~us(trait):animal
 ## 
-##                                post.mean l-95% CI u-95% CI eff.samp
-## traittarsus:traittarsus.animal    0.4553  0.27866 0.667518   114.86
-## traitback:traittarsus.animal     -0.1038 -0.20740 0.006613   107.27
-## traittarsus:traitback.animal     -0.1038 -0.20740 0.006613   107.27
-## traitback:traitback.animal        0.1747  0.08141 0.290278    84.93
+##                                post.mean l-95% CI  u-95% CI eff.samp
+## traittarsus:traittarsus.animal    0.4569  0.29698  0.631548   166.52
+## traitback:traittarsus.animal     -0.1039 -0.21623 -0.005504    95.83
+## traittarsus:traitback.animal     -0.1039 -0.21623 -0.005504    95.83
+## traitback:traitback.animal        0.1673  0.06675  0.265210    79.63
 ## 
 ##                ~us(trait):fosternest
 ## 
-##                                    post.mean  l-95% CI u-95% CI eff.samp
-## traittarsus:traittarsus.fosternest   0.10712 6.150e-02  0.16427      400
-## traitback:traittarsus.fosternest     0.04719 5.215e-05  0.09149      400
-## traittarsus:traitback.fosternest     0.04719 5.215e-05  0.09149      400
-## traitback:traitback.fosternest       0.14046 7.281e-02  0.21188      400
+##                                    post.mean l-95% CI u-95% CI eff.samp
+## traittarsus:traittarsus.fosternest    0.1093 0.059612  0.16416      400
+## traitback:traittarsus.fosternest      0.0474 0.003164  0.09963      400
+## traittarsus:traitback.fosternest      0.0474 0.003164  0.09963      400
+## traitback:traitback.fosternest        0.1388 0.072613  0.20281      400
 ## 
 ##  R-structure:  ~us(trait):units
 ## 
 ##                               post.mean l-95% CI u-95% CI eff.samp
-## traittarsus:traittarsus.units   0.33809  0.21011  0.44328    164.0
-## traitback:traittarsus.units     0.01877 -0.05672  0.09915    143.1
-## traittarsus:traitback.units     0.01877 -0.05672  0.09915    143.1
-## traitback:traitback.units       0.70984  0.61302  0.79937    167.0
+## traittarsus:traittarsus.units   0.33640  0.23381  0.43885    154.1
+## traitback:traittarsus.units     0.01834 -0.05355  0.09852    140.0
+## traittarsus:traitback.units     0.01834 -0.05355  0.09852    140.0
+## traitback:traitback.units       0.71827  0.61422  0.81985    228.2
 ## 
 ##  Location effects: cbind(tarsus, back) ~ trait:sex + trait:hatchdate - 1 
 ## 
-##                        post.mean   l-95% CI   u-95% CI eff.samp  pMCMC   
-## traittarsus:sexFem    -0.4052259 -0.5836076 -0.2740057    296.5 &lt;0.003 **
-## traitback:sexFem      -0.0074674 -0.1379755  0.1174429    371.0  0.925   
-## traittarsus:sexMale    0.3655342  0.2509299  0.5077307    400.0 &lt;0.003 **
-## traitback:sexMale      0.0001402 -0.1293778  0.1405063    400.0  0.990   
-## traittarsus:sexUNK    -0.1648495 -0.4180403  0.1044853    400.0  0.250   
-## traitback:sexUNK       0.1187327 -0.1531585  0.3920648    334.5  0.380   
-## traittarsus:hatchdate -0.0450203 -0.1776030  0.0689023    541.8  0.475   
-## traitback:hatchdate   -0.0883704 -0.2022671  0.0089985    400.0  0.090 . 
+##                       post.mean  l-95% CI  u-95% CI eff.samp  pMCMC   
+## traittarsus:sexFem    -0.408998 -0.545180 -0.258828    400.0 &lt;0.003 **
+## traitback:sexFem      -0.008014 -0.122244  0.126094    400.0  0.875   
+## traittarsus:sexMale    0.360534  0.223911  0.484212    400.0 &lt;0.003 **
+## traitback:sexMale     -0.001406 -0.110673  0.144875    400.0  0.955   
+## traittarsus:sexUNK    -0.172780 -0.394542  0.119233    559.4  0.215   
+## traitback:sexUNK       0.123533 -0.138849  0.446217    400.0  0.435   
+## traittarsus:hatchdate -0.046965 -0.157485  0.070121    400.0  0.465   
+## traitback:hatchdate   -0.084573 -0.183224  0.001546    400.0  0.055 . 
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <pre class="r"><code>mean(predict.MCMCglmm(m1))</code></pre>
-<pre><code>## [1] -0.004170861</code></pre>
+<pre><code>## [1] -0.006845465</code></pre>
 <pre class="r"><code>plot(m1)</code></pre>
 <p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-1.png" width="672" /><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-2.png" width="672" /><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-3.png" width="672" /><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-4.png" width="672" /><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-5.png" width="672" /><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-6.png" width="672" /></p>
 </div>

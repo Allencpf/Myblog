@@ -1,0 +1,197 @@
+---
+title: 'Bayesian Random Slope model with  R '
+author: Trevor
+date: '2021-05-29'
+slug: bayesian-r
+categories:
+  - R
+  - Models
+tags:
+  - Bayesian
+editor_options: 
+  chunk_output_type: console
+---
+
+本文通过使用R，主要通过使用**tidyverse**包来进行数据清洗处理以及绘图，使用**brms**包来实现Bayesian回归模型。
+
+## 1. 贝叶斯数据分析的基本步骤
+
+1. 确定与研究问题相关的数据。数据的度量尺度是什么？哪些数据变量是因变量，哪些数据变量应该是解释变量？
+
+2. 为相关数据建立一个描述性模型，给予数学形式及其参数描述。
+
+3. 指定参数的先验分布。
+
+4. 使用贝叶斯推理在参数值之间重新分配可信度。从理论上解释有意义的变量的后验分布（假设模型是对数据的合理描述）。
+
+5. 检查后验预测是否以合理的准确度模拟数据（即进行“后验预测检查”）。如果不是，则考虑不同的描述模型。
+
+## 2. Example 
+
+### 2.1导入数据
+```{r message=FALSE, warning=FALSE}
+library(bruceR) # 一个集合许多数据分析常用包的包
+library(brms) # for Bayesian model 
+library(coda) # for Bayesian 可视化
+
+df <- import("/Users/cpf/Downloads/salary.txt") # bruceR 内置的函数import，                                                                 # 可以导入csv、excel等多种格式
+# 观察数据
+glimpse(df) 
+
+## id: 就是id； time: 获得博士学位到现在的时间； pub: 出版数量； 
+# sex: 性别 1是女性，0是男性； citation: 被引用数量； salary: 现在的收入
+
+#去掉第一列id, 数据的基本描述统计, 相关系数描述图1
+Describe(df[, -1],plot = TRUE) 
+
+# 相关系数描述图2
+pairs.panels(df[, -1], ellipses = FALSE)
+
+```
+
+### 2.2 简单线性回归，因变量**salary**， 自变量**pub**
+
+#### 2.2.1 先对变量进行简单可视化
+
+本文的可视化主要用到的是ggplot2函数，在可视化之前首先介绍如何在图中正确显示中文字体。
+
+```{r, message=FALSE, warning=FALSE}
+# 解决中文乱码问题
+library(showtext) 
+font_add("kaiti", "/Users/cpf/Library/Fonts/楷体_GB2312.ttf")
+showtext_auto()
+
+# 开始画图
+p1 <- ggplot(df, #数据
+             # 映射到画布上，x轴为pub，y轴为salary
+             aes(x = pub, y = salary)) +
+  # geom 可以画points， lines， shapes等多种类型的图，这里是散点图
+  geom_point() +
+  # 在散点图的基础上再加上平滑拟合工资的均值
+  geom_smooth() +
+  # 修改连续型坐标轴刻度及标签
+  scale_x_continuous(breaks = seq(0,80,by=10)) +
+  # 修改y轴
+  scale_y_continuous(breaks = seq(40000, 100000, by=10000)) + 
+  #设置坐标轴标签
+  labs(x = "pub 出版数量", y = "salary 薪水") +
+  theme_bw()
+
+m1 <- lm( salary ~ 1 + pub, data = df)
+
+summary(m1)
+
+p1  +
+  # 无参数的拟合
+  geom_smooth(se = FALSE) +
+  # 线性回归（红线）
+  geom_smooth(method = "lm", col = "red")
+```
+
+### 2.3 Bayesian回归模型: Basic; Random intercept; Random slope
+```{r, cache=T, echo=F,message=FALSE, warning=FALSE}
+
+# basic model 
+fit1 <- 
+  brm(data = df,
+       family = gaussian,
+       formula = salary ~ 1 + pub,
+       chains = 4, cores = 4, iter = 2000, warmup = 1000,
+       seed = 2
+  )
+# get_prior(salary ~ 1 + pub, data = df ) #获得模型的先验分布
+
+# Random intercep bayesian model 
+fit2 <- 
+  brm(data = df,
+       family = gaussian,
+       formula = salary ~ 1 + pub + (1 | id),
+       chains = 4, cores = 4, iter = 2000, warmup = 1000,
+       seed = 2
+  )
+
+# get_prior(salary ~ 1 + pub + (1 | id), data=df )
+
+# Random Slope bayesian model 
+fit3 <- 
+  brm(data = df,
+       family = gaussian,
+       formula = salary ~ 1 + pub + (1 + pub| id),
+       chains = 4, cores = 4, iter = 2000, warmup = 1000,
+       seed = 2
+  )
+
+# get_prior(salary ~ 1 + pub + (1 + pub| id), data=df )
+
+```
+
+### 2.3.1 调用`summary`函数来查看模型拟合效果
+
+```{r, message=FALSE, warning=FALSE}
+summary(fit1)
+summary(fit2)
+summary(fit3)
+```
+
+**Estimate**表示参数的后验分布（posterior means）, **Est.Error** 表示估计的标准差
+
+### 2.3.2 绘制后验分布密度图来观测模型的拟合效果
+
+```{r, eval=F, echo=F}
+
+coad_fit2 <- as.mcmc(fit2)
+coda_fit3 <- as.mcmc(fit3)
+gelman.plot(coda_fit3[,1:6], lga.max = 200)
+
+```
+
+```{r}
+plot(fit1)
+plot(fit2)
+plot(fit3)
+```
+
+### 2.3.3 如何判断模型中参数拟合效果？
+- 基本要求
+ - 所有参数的 Rhat < 1.01
+ - 没有过度发散的情况
+ - Bulk effective sample size(ESS) 和 tail ESS 要足够大，通常大于1500
+
+如果没有足够收敛的话，可以
+
+1. 运行更多迭代（令iter = 2000 到 iter = 4000）
+2. 将 adapt_delta 增加到接近 1（.9、.95、.99、.999 等）
+3. 使用更强的先验（尤其是在较小的样本中）
+
+
+
+### 2.3.4 后验预测检查
+```{r message=FALSE, warning=FALSE}
+library(patchwork)
+pp1 <- pp_check(fit1)
+pp2 <- pp_check(fit2)
+pp3 <- pp_check(fit3)
+
+pp1 / pp2 / pp3
+```
+
+上图显示了模型预测（以较浅的线条，标记为 yrep）与原始结果变量（以较深的线条标记为 y）相比有些偏差。这意味着可以通过放宽正态假设来改进模型。然而，对于这种相对轻微的错误指定，推论仍然可以接受，因为固定效应系数通常在轻微违反正态性假设的情况下是稳健的。从上到下三个图对比可以发现Random slope 模型拟合效果最好。
+
+### 2.3.5 模型比较
+
+
+可以使用 loo() 函数来比较模型，该函数计算留一法交叉验证标准（LOO；是一种类似AIC，BIC，但Bayesian模型中评判效果更好的方法）。现在，只知道 LOO 值较小的模型应该是首选。这里比较普通模型，随机截距模型，随机斜率模型
+
+```{r}
+LOO(fit1,fit2,fit3)
+```
+
+具有随机斜率的模型的 LOO 最低，表明应包括随机斜率。一般来说，对于贝叶斯建模，建议包括所有随机斜率，因为它通常不会像频率论方法那样存在收敛问题。
+
+
+
+## Session info
+```{r, echo=F, message=FALSE, warning=FALSE}
+sessionInfo()
+```
+

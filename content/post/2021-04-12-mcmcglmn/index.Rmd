@@ -1,5 +1,5 @@
 ---
-title: McMCglmn
+title: McMCglmm
 author: Trevor
 date: '2021-04-12'
 slug: mcmcglmn
@@ -134,7 +134,12 @@ R-结构可以与G-结构相同的方式进行参数化parametrized，尽管目�
 summary(m1)
 mean(predict.MCMCglmm(m1))
 plot(m1)
-```
+install.packages("coda")
+library(coda)
+
+m1.coda <- read.coda.interactive(m1)
+``` 
+
 
 
 
