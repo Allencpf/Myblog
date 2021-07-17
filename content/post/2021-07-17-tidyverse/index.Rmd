@@ -1,0 +1,312 @@
+---
+title: tidyverse 简介
+author: Trevor
+date: '2021-07-17'
+slug: tidyverse
+categories:
+  - R
+  - Example
+tags:
+  - R
+---
+
+# 1. 数据分析的开端，Tidyverse？
+
+tidyverse 是一个清晰的 R 包集合，在数据操作、探索和可视化领域提供统一的数据科学解决方案，这些解决方案具有共同的设计理念。它是由 RStudio 背后的首席科学家 Hadley Wickham 创建的。 tidyverse 中的 R 包旨在提高统计学家和数据科学家的工作效率。包引导他们完成工作流程，促进沟通并产生可重复的工作产品。 tidyverse 本质上侧重于使工作流成为可能的工具的互连。在数据科学项目中采用 tidyverse有很多优势。它提供一致的功能、工作流覆盖范围、数据科学教育、数据科学工具开发的简化路径以及提高生产力的潜力。 
+
+它的主要目标之一是帮助任何需要分析数据的人高效地工作。如下图所示，tidyverse可以帮助你实现：
+
+1. 数据导入/导出
+2. 数据清洗处理
+3. 批量建模
+4. 数据/模型结果可视化
+5. 生成(可交互)的分析报告. (eg. pdf, word, ppt)
+
+本文主要讨论前两个目标及数据的创建导入导出，以及数据清洗处理。
+
+```{r, echo=F}
+knitr::include_graphics("/Users/cpf/Documents/paper/myblog/Myblog/figure/01_tidyverse_data_science.png")
+```
+
+
+* tidyverse核心： 管道操作 %>% 
+
+进行数据分析前先导入必要的包和数据：
+```{r}
+library(tidyverse)
+library(rio)
+data("german", package = "rchallenge") 
+```
+
+首先查看你的数据集：
+```{r}
+german %>% glimpse()
+```
+
+如你想对数据集german进行如下操作,：
+  * 选择status,savings,amount,age,credit_risk这些列
+
+```{r}
+german %>% 
+  select(status,savings,amount, age, credit_risk) 
+```
+
+  * 再按分类变量status分类
+
+```{r}
+german %>% 
+  select(status,savings,amount, age, credit_risk) %>% 
+  group_by(status) 
+```
+
+  * 并计算每一类的个数。
+
+```{r}
+german %>% 
+  select(status,savings,amount, age, credit_risk) %>% 
+  group_by(status)
+```
+
+通过tidyverse这样的工作流程，我们可以按照自己的思路一步一步的处理清洗我们的数据。
+
+# 2. 数据导入/导出
+
+* 数据读取
+
+这里建议使用rio包里的import函数导入。可以导入xlxs,.csv,.txt, SPSS, Stata, SAS等大部分的格式。
+
+当然每个格式也有单独对应的包，如readr可以用来读取csv,readxl读取xls,haven读取SPSS,Stat,SAS文件等。
+
+```{r, eval=F}
+library(rio)
+df = import("yourdirectory/data.csv")
+df = import("yourdirectory/data.xlxs")
+```
+
+* 数据导出
+
+同理这里推荐使用rio包里的export函数。
+
+```{r, eval=F}
+export(df, "yourdirectory/name.csv")
+export(df, "yourdirectory/name.xlxs")
+```
+
+
+# 3. tidyverse数据清洗处理流程
+
+这里主要介绍关于行列创建修改的基本操作，以及一些分组汇总知识。更多细节请查看。
+
+[R语言编程--基于tidyverse](https://zhuanlan.zhihu.com/p/198185888)
+
+## 3.1选择列
+主要使用到的函数有 relocate/select
+
+* select 选择所需要的列
+* relocate 选择需要的列并排序，它保留了所有列，但为重新排序提供了更大的灵活性。
+ 
+```{r}
+german %>% select(status,credit_risk,job,age) %>% glimpse()
+
+german %>% select(2,3,5,7) %>% glimpse()
+
+# 选取这些列排到最前面，保留剩余列
+german %>% relocate(status,credit_risk,job,age) %>% glimpse()
+
+# 选取这些列，且以status-age 为顺序，age是倒数第三列。
+german %>% relocate(status,credit_risk,job,age, .after = last_col(offset = 3)) %>% glimpse()
+```
+
+* 使用函数选择
+
+```{r}
+german %>% select(starts_with("s")) %>% glimpse() # 选择列名是以s开始的
+german %>% select(ends_with("s")) %>% glimpse() # 选择列名是以s结束的
+german %>% select(contains("s")) %>% glimpse() # 选择列名中包含s的
+german %>% select(where(is.factor)) %>% glimpse()  # 选择是列属性是factor的
+```
+
+* 使用逻辑符选择
+
+```{r}
+# 选择这三列，并且这三列中是因子的
+german %>% select(c(status,age,credit_risk) & where(is.factor)) %>% glimpse()
+
+# 不选择这age,status这两列
+german %>% select(!c(age,status)) %>% glimpse()
+german %>% select(-c(age,status)) %>% glimpse()
+```
+
+## 3.2 修改列
+
+* 创建新列/修改新列/修改旧列 mutate
+
+```{r}
+german %>% 
+  # 创建新列age_mean计算age的均值，一般默认会把新列放在最后，.before=1使得放在第一列
+  mutate(age_mean = mean(age), .before = 1) %>% 
+  # 也可以修改原有的列
+  mutate(age = age + 1) %>% 
+  #也可以同时创建多个列，顺序是依次往后计算，所以前面创建的列可以在后面直接用。
+  mutate(duration_mean = mean(duration),
+         duration_median = median(duration),
+         duration_sd = sd(duration),
+         order = duration_mean > duration_median,
+         order = as.numeric(order),
+         .before= 1) %>% 
+  glimpse()
+
+```
+
+* 同时修改多个列 across
+
+```{r}
+german %>%
+  # 将选定列转化为字符型
+  mutate(across(c(duration, age), as.character)) %>% 
+  # 将每一列转化为数字型
+  mutate(across(everything(), as.numeric)) %>% 
+  # 分别计算duration, age 列的均值和方差
+  mutate(across(c(duration, age),
+                .fns = list(mean = mean, stdev =sd)),
+         .before = 1) %>% 
+  glimpse()
+  
+german %>% 
+  group_by(status) %>% 
+  summarise(
+    across(c(duration,age), .fns = list(mean = mean, stdev = sd)),
+    .groups = "drop"
+  ) %>% 
+  glimpse()
+```
+
+* 对列进行重新编码
+
+  * if_else() 多用于处理二分类，也可以多分类但不推荐
+```{r}
+# 当age>=60，老人，1
+german %>% 
+  mutate(old = if_else(age<60,0,1)) %>% 
+  glimpse()
+
+# 也可以用多个if_else 嵌套处理多分类
+# age<30:0 ; age<60:1; else:2 
+german %>% 
+  mutate(age_category = if_else(age<30,0,
+                                if_else(age<60,1,2)),
+         .before=1) %>% 
+  glimpse()
+```
+
+  * case_when() 用于处理多分类，要比if_else()更直接好用
+
+```{r}
+# 同理对年龄进行多分类
+german %>% 
+  mutate(age_category = case_when(
+    age<30 ~ 0,
+    age<60 ~ 1,
+    TRUE ~ 2
+  ),
+  .before=1) %>% 
+  glimpse()
+german %>% 
+  mutate(age_category = case_when(
+    age<30 ~ "young",
+    age<60 ~ "middle",
+    TRUE ~ "old"
+  ),
+  .before=1) %>% 
+  glimpse()
+```
+
+ * one-hot 处理 correlationfunnel
+
+把所有变量进行one-hot处理，生成二进制 (0/1) 变量的特征集。
+
+* Numeric data 被切分（使用n_bins）成分类数据，然后所有分类数据都被单热编码以产生二进制特征。为了防止低频类别（高基数类别）增加维数（结果数据框的宽度），我们使用 thresh_infreq = 0.01 和 name_infreq = "OTHER" 对多余的类别进行分组。
+
+* Categorical data : one-hot encoding
+
+```{r}
+# 把所有变量进行one-hot 处理
+# install.packages("correlationfunnel")
+german %>% 
+  correlationfunnel::binarize(n_bins = 5, thresh_infreq = 0.1, name_infreq = "OTHER",
+                              one_hot = TRUE) %>% 
+  glimpse()
+```
+ 
+关于correlationfunnel包的更多具体使用请查看[R packages: Correlationfunnel 相关漏斗图，可视化因变量自变量之间的相关关系](https://blog.csdn.net/Allenmumu/article/details/118329974)
+ 
+ 
+
+## 3.3 筛选行 filter()
+
+```{r}
+# 选取满足多个条件的行，这里, 相当于 & 表示和的意思
+german %>% 
+  filter(age > 60, credit_risk == "good", telephone == "no") %>% 
+  glimpse()
+
+
+german %>% 
+  filter(age != 35 | age>60, credit_risk == "good") %>% 
+  glimpse()
+
+# 选取age列和duration列都大于50的行
+german %>% 
+  filter(if_all(c(age, duration), ~ .x > 50)) %>% 
+  glimpse()
+```
+
+## 分组汇总
+
+```{r}
+
+german %>% 
+  group_by(status) %>% 
+  count(credit_risk, name = "n") %>% 
+  glimpse()
+
+german_wider = german %>% 
+  group_by(status) %>% 
+  count(credit_risk, name = "n") %>% 
+  pivot_wider(
+    names_from = credit_risk,
+    values_from = n,
+    values_fill = 0
+  ) %>% 
+  ungroup() %>% 
+  glimpse()
+```
+
+生成分组表格的快捷方式
+```{r}
+library(table1)
+# 汇总如下变量 
+table1(~  duration + age + status + job , data = german)
+
+```
+
+```{r}
+
+# 按credit_risk 分组汇总变量
+table1(~  duration + age + status + job | credit_risk, data = german)
+```
+
+# 总结
+
+tidyverse 的优势包括一致的功能、工作流覆盖、数据科学教育的途径、开发数据科学工具的简约方法以及提高生产力的可能性。tidyverse 用一种更加优雅且符合人直观思路的方式，以管道式、泛函式编程技术实现了数据科学的
+整个流程:数据导入、数据清洗、数据操作、数据可视化、数据建模、可重现与交互报告。
+
+如果你也面临以下问题待解决：
+
+* 处理自己领域真实的数据
+* 对数据进行建模分析、可视化
+* 得出有用的结论
+
+欢迎使用tidyverse工作流。是从basic R 还是tidy R入门R语言的争议一直都有，没有绝对的对错，只有合适与否。基于我自身，我需要解决的就是上述三个问题，因此tidy R 工作流程更适合我。
+
+

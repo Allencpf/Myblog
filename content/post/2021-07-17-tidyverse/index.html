@@ -1,0 +1,2962 @@
+---
+title: tidyverse 简介
+author: Trevor
+date: '2021-07-17'
+slug: tidyverse
+categories:
+  - R
+  - Example
+tags:
+  - R
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+<link href="{{< blogdown/postref >}}index_files/table1/table1_defaults.css" rel="stylesheet" />
+
+
+<div id="数据分析的开端tidyverse" class="section level1">
+<h1>1. 数据分析的开端，Tidyverse？</h1>
+<p>tidyverse 是一个清晰的 R 包集合，在数据操作、探索和可视化领域提供统一的数据科学解决方案，这些解决方案具有共同的设计理念。它是由 RStudio 背后的首席科学家 Hadley Wickham 创建的。 tidyverse 中的 R 包旨在提高统计学家和数据科学家的工作效率。包引导他们完成工作流程，促进沟通并产生可重复的工作产品。 tidyverse 本质上侧重于使工作流成为可能的工具的互连。在数据科学项目中采用 tidyverse有很多优势。它提供一致的功能、工作流覆盖范围、数据科学教育、数据科学工具开发的简化路径以及提高生产力的潜力。</p>
+<p>它的主要目标之一是帮助任何需要分析数据的人高效地工作。如下图所示，tidyverse可以帮助你实现：</p>
+<ol style="list-style-type: decimal">
+<li>数据导入/导出</li>
+<li>数据清洗处理</li>
+<li>批量建模</li>
+<li>数据/模型结果可视化</li>
+<li>生成(可交互)的分析报告. (eg. pdf, word, ppt)</li>
+</ol>
+<p>本文主要讨论前两个目标及数据的创建导入导出，以及数据清洗处理。</p>
+<p><img src="/Users/cpf/Documents/paper/myblog/Myblog/figure/01_tidyverse_data_science.png" width="1018" /></p>
+<ul>
+<li>tidyverse核心： 管道操作 %&gt;%</li>
+</ul>
+<p>进行数据分析前先导入必要的包和数据：</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.3     ✓ purrr   0.3.4
+## ✓ tibble  3.1.1     ✓ dplyr   1.0.5
+## ✓ tidyr   1.1.3     ✓ stringr 1.4.0
+## ✓ readr   1.4.0     ✓ forcats 0.5.1</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(rio)
+data(&quot;german&quot;, package = &quot;rchallenge&quot;) </code></pre>
+<p>首先查看你的数据集：</p>
+<pre class="r"><code>german %&gt;% glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 21
+## $ status                  &lt;fct&gt; no checking account, no checking account, ... …
+## $ duration                &lt;int&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6…
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ amount                  &lt;int&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361,…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ employment_duration     &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 …
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ property                &lt;fct&gt; car or other, unknown / no property, unknown /…
+## $ age                     &lt;int&gt; 21, 36, 23, 39, 38, 48, 39, 40, 65, 23, 36, 24…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ job                     &lt;fct&gt; skilled employee/official, skilled employee/of…
+## $ people_liable           &lt;fct&gt; 0 to 2, 3 or more, 0 to 2, 3 or more, 0 to 2, …
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, yes, yes, yes, yes, yes, no, no, n…
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…</code></pre>
+<p>如你想对数据集german进行如下操作,：
+* 选择status,savings,amount,age,credit_risk这些列</p>
+<pre class="r"><code>german %&gt;% 
+  select(status,savings,amount, age, credit_risk) </code></pre>
+<pre><code>##                                          status                    savings
+## 1                           no checking account unknown/no savings account
+## 2                           no checking account unknown/no savings account
+## 3                                    ... &lt; 0 DM              ... &lt;  100 DM
+## 4                           no checking account unknown/no savings account
+## 5                           no checking account unknown/no savings account
+## 6                           no checking account unknown/no savings account
+## 7                           no checking account unknown/no savings account
+## 8                           no checking account unknown/no savings account
+## 9    ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 10                                   ... &lt; 0 DM       100 &lt;= ... &lt;  500 DM
+## 11                          no checking account unknown/no savings account
+## 12                          no checking account              ... &lt;  100 DM
+## 13                          no checking account unknown/no savings account
+## 14                                   ... &lt; 0 DM              ... &lt;  100 DM
+## 15                          no checking account             ... &gt;= 1000 DM
+## 16                          no checking account       100 &lt;= ... &lt;  500 DM
+## 17                          no checking account unknown/no savings account
+## 18                                   ... &lt; 0 DM       100 &lt;= ... &lt;  500 DM
+## 19                                   ... &lt; 0 DM unknown/no savings account
+## 20   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 21                          no checking account unknown/no savings account
+## 22                                   ... &lt; 0 DM unknown/no savings account
+## 23                                   ... &lt; 0 DM unknown/no savings account
+## 24                                   ... &lt; 0 DM unknown/no savings account
+## 25                          no checking account             ... &gt;= 1000 DM
+## 26                                   ... &lt; 0 DM unknown/no savings account
+## 27                          no checking account unknown/no savings account
+## 28                                   ... &lt; 0 DM unknown/no savings account
+## 29   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 30                             0&lt;= ... &lt; 200 DM unknown/no savings account
+## 31                             0&lt;= ... &lt; 200 DM unknown/no savings account
+## 32   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 33   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 34   ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 35                          no checking account unknown/no savings account
+## 36                          no checking account unknown/no savings account
+## 37   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 38   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 39   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 40   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 41   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 42                          no checking account unknown/no savings account
+## 43   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 44                                   ... &lt; 0 DM             ... &gt;= 1000 DM
+## 45                                   ... &lt; 0 DM             ... &gt;= 1000 DM
+## 46                          no checking account unknown/no savings account
+## 47   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 48   ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 49   ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 50                          no checking account              ... &lt;  100 DM
+## 51   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 52                             0&lt;= ... &lt; 200 DM unknown/no savings account
+## 53   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 54   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 55   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 56                          no checking account unknown/no savings account
+## 57   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 58                          no checking account unknown/no savings account
+## 59   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 60   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 61   ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 62   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 63   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 64   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 65                          no checking account unknown/no savings account
+## 66   ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 67   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 68   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 69                                   ... &lt; 0 DM unknown/no savings account
+## 70   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 71                                   ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 72   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 73   ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 74   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 75                             0&lt;= ... &lt; 200 DM             ... &gt;= 1000 DM
+## 76                                   ... &lt; 0 DM             ... &gt;= 1000 DM
+## 77   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 78   ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 79                          no checking account unknown/no savings account
+## 80   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 81   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 82   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 83                                   ... &lt; 0 DM              ... &lt;  100 DM
+## 84                             0&lt;= ... &lt; 200 DM       100 &lt;= ... &lt;  500 DM
+## 85   ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 86                          no checking account       500 &lt;= ... &lt; 1000 DM
+## 87   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 88   ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 89                          no checking account       500 &lt;= ... &lt; 1000 DM
+## 90                                   ... &lt; 0 DM             ... &gt;= 1000 DM
+## 91                                   ... &lt; 0 DM              ... &lt;  100 DM
+## 92                                   ... &lt; 0 DM             ... &gt;= 1000 DM
+## 93                                   ... &lt; 0 DM unknown/no savings account
+## 94                          no checking account unknown/no savings account
+## 95                                   ... &lt; 0 DM unknown/no savings account
+## 96   ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 97                                   ... &lt; 0 DM unknown/no savings account
+## 98                                   ... &lt; 0 DM unknown/no savings account
+## 99                          no checking account unknown/no savings account
+## 100                                  ... &lt; 0 DM unknown/no savings account
+## 101  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 102                         no checking account unknown/no savings account
+## 103                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 104                                  ... &lt; 0 DM unknown/no savings account
+## 105  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 106  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 107  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 108  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 109  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 110  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 111                         no checking account unknown/no savings account
+## 112                         no checking account unknown/no savings account
+## 113                                  ... &lt; 0 DM       100 &lt;= ... &lt;  500 DM
+## 114  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 115                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 116                                  ... &lt; 0 DM unknown/no savings account
+## 117                                  ... &lt; 0 DM unknown/no savings account
+## 118  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 119  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 120  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 121                                  ... &lt; 0 DM unknown/no savings account
+## 122  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 123                                  ... &lt; 0 DM unknown/no savings account
+## 124  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 125  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 126  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 127  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 128  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 129  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 130  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 131                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 132  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 133                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 134  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 135  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 136  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 137                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 138                         no checking account              ... &lt;  100 DM
+## 139                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 140                            0&lt;= ... &lt; 200 DM             ... &gt;= 1000 DM
+## 141  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 142  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 143                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 144  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 145  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 146  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 147                         no checking account             ... &gt;= 1000 DM
+## 148                         no checking account             ... &gt;= 1000 DM
+## 149  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 150                                  ... &lt; 0 DM unknown/no savings account
+## 151                            0&lt;= ... &lt; 200 DM       500 &lt;= ... &lt; 1000 DM
+## 152  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 153  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 154                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 155                                  ... &lt; 0 DM       100 &lt;= ... &lt;  500 DM
+## 156  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 157                         no checking account unknown/no savings account
+## 158  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 159                                  ... &lt; 0 DM unknown/no savings account
+## 160                                  ... &lt; 0 DM unknown/no savings account
+## 161  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 162                            0&lt;= ... &lt; 200 DM       500 &lt;= ... &lt; 1000 DM
+## 163  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 164  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 165                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 166  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 167  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 168  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 169  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 170  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 171                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 172                         no checking account unknown/no savings account
+## 173                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 174  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 175  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 176  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 177  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 178                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 179  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 180  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 181  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 182  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 183                         no checking account             ... &gt;= 1000 DM
+## 184  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 185  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 186  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 187  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 188  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 189                                  ... &lt; 0 DM unknown/no savings account
+## 190                            0&lt;= ... &lt; 200 DM              ... &lt;  100 DM
+## 191  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 192                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 193                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 194  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 195  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 196  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 197  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 198  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 199  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 200  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 201  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 202  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 203                            0&lt;= ... &lt; 200 DM             ... &gt;= 1000 DM
+## 204                         no checking account             ... &gt;= 1000 DM
+## 205                         no checking account             ... &gt;= 1000 DM
+## 206                                  ... &lt; 0 DM unknown/no savings account
+## 207                         no checking account unknown/no savings account
+## 208                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 209                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 210  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 211                            0&lt;= ... &lt; 200 DM             ... &gt;= 1000 DM
+## 212                         no checking account       100 &lt;= ... &lt;  500 DM
+## 213                         no checking account       100 &lt;= ... &lt;  500 DM
+## 214                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 215                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 216                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 217  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 218                            0&lt;= ... &lt; 200 DM       500 &lt;= ... &lt; 1000 DM
+## 219                         no checking account unknown/no savings account
+## 220  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 221                         no checking account unknown/no savings account
+## 222                            0&lt;= ... &lt; 200 DM             ... &gt;= 1000 DM
+## 223  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 224  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 225                         no checking account       500 &lt;= ... &lt; 1000 DM
+## 226  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 227                         no checking account              ... &lt;  100 DM
+## 228  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 229  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 230                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 231  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 232  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 233  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 234                         no checking account unknown/no savings account
+## 235                                  ... &lt; 0 DM unknown/no savings account
+## 236                         no checking account unknown/no savings account
+## 237  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 238                         no checking account unknown/no savings account
+## 239  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 240  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 241  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 242  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 243  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 244  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 245  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 246  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 247  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 248  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 249                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 250  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 251                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 252                                  ... &lt; 0 DM unknown/no savings account
+## 253  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 254  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 255  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 256                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 257                         no checking account unknown/no savings account
+## 258  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 259                         no checking account unknown/no savings account
+## 260  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 261  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 262  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 263                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 264  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 265  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 266  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 267                                  ... &lt; 0 DM unknown/no savings account
+## 268  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 269  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 270  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 271  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 272  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 273  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 274  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 275  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 276  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 277  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 278                                  ... &lt; 0 DM unknown/no savings account
+## 279                         no checking account unknown/no savings account
+## 280                            0&lt;= ... &lt; 200 DM              ... &lt;  100 DM
+## 281                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 282                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 283  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 284                                  ... &lt; 0 DM unknown/no savings account
+## 285                         no checking account       500 &lt;= ... &lt; 1000 DM
+## 286  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 287                         no checking account       100 &lt;= ... &lt;  500 DM
+## 288  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 289  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 290  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 291  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 292  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 293  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 294                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 295  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 296  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 297  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 298  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 299                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 300  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 301                         no checking account unknown/no savings account
+## 302                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 303                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 304  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 305                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 306  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 307                         no checking account unknown/no savings account
+## 308  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 309                         no checking account unknown/no savings account
+## 310  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 311  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 312  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 313  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 314                                  ... &lt; 0 DM unknown/no savings account
+## 315                         no checking account unknown/no savings account
+## 316  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 317  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 318                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 319  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 320  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 321  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 322  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 323  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 324                         no checking account             ... &gt;= 1000 DM
+## 325  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 326  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 327  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 328                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 329  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 330  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 331  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 332  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 333  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 334  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 335  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 336                         no checking account unknown/no savings account
+## 337                         no checking account              ... &lt;  100 DM
+## 338                         no checking account unknown/no savings account
+## 339  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 340  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 341  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 342                         no checking account unknown/no savings account
+## 343  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 344  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 345  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 346  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 347  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 348                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 349                         no checking account unknown/no savings account
+## 350  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 351  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 352  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 353  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 354                         no checking account unknown/no savings account
+## 355  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 356  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 357                         no checking account unknown/no savings account
+## 358  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 359                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 360  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 361  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 362                         no checking account unknown/no savings account
+## 363  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 364  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 365  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 366  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 367                            0&lt;= ... &lt; 200 DM       100 &lt;= ... &lt;  500 DM
+## 368                                  ... &lt; 0 DM unknown/no savings account
+## 369                         no checking account unknown/no savings account
+## 370                         no checking account unknown/no savings account
+## 371                         no checking account unknown/no savings account
+## 372  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 373                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 374                         no checking account unknown/no savings account
+## 375  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 376                         no checking account unknown/no savings account
+## 377                         no checking account unknown/no savings account
+## 378                                  ... &lt; 0 DM unknown/no savings account
+## 379                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 380  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 381                         no checking account unknown/no savings account
+## 382                         no checking account unknown/no savings account
+## 383  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 384                                  ... &lt; 0 DM unknown/no savings account
+## 385  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 386                                  ... &lt; 0 DM unknown/no savings account
+## 387                                  ... &lt; 0 DM unknown/no savings account
+## 388  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 389                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 390                         no checking account             ... &gt;= 1000 DM
+## 391  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 392                            0&lt;= ... &lt; 200 DM       100 &lt;= ... &lt;  500 DM
+## 393                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 394  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 395  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 396                                  ... &lt; 0 DM unknown/no savings account
+## 397                                  ... &lt; 0 DM unknown/no savings account
+## 398  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 399  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 400                                  ... &lt; 0 DM unknown/no savings account
+## 401                                  ... &lt; 0 DM unknown/no savings account
+## 402                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 403                         no checking account       100 &lt;= ... &lt;  500 DM
+## 404  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 405  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 406                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 407  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 408                                  ... &lt; 0 DM unknown/no savings account
+## 409                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 410  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 411  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 412  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 413  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 414  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 415  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 416  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 417  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 418  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 419  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 420                         no checking account unknown/no savings account
+## 421  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 422                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 423                                  ... &lt; 0 DM unknown/no savings account
+## 424  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 425  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 426  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 427                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 428                                  ... &lt; 0 DM unknown/no savings account
+## 429                         no checking account             ... &gt;= 1000 DM
+## 430                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 431  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 432  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 433                                  ... &lt; 0 DM       100 &lt;= ... &lt;  500 DM
+## 434                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 435  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 436  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 437  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 438  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 439                         no checking account unknown/no savings account
+## 440                                  ... &lt; 0 DM unknown/no savings account
+## 441  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 442  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 443                         no checking account             ... &gt;= 1000 DM
+## 444  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 445  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 446  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 447  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 448  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 449  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 450                                  ... &lt; 0 DM       100 &lt;= ... &lt;  500 DM
+## 451                                  ... &lt; 0 DM       100 &lt;= ... &lt;  500 DM
+## 452                         no checking account             ... &gt;= 1000 DM
+## 453                                  ... &lt; 0 DM unknown/no savings account
+## 454                                  ... &lt; 0 DM unknown/no savings account
+## 455                         no checking account unknown/no savings account
+## 456                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 457                                  ... &lt; 0 DM unknown/no savings account
+## 458                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 459                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 460  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 461                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 462                                  ... &lt; 0 DM unknown/no savings account
+## 463  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 464                         no checking account unknown/no savings account
+## 465                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 466                            0&lt;= ... &lt; 200 DM             ... &gt;= 1000 DM
+## 467                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 468  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 469                                  ... &lt; 0 DM unknown/no savings account
+## 470  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 471  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 472  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 473  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 474  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 475                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 476  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 477  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 478  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 479  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 480                                  ... &lt; 0 DM unknown/no savings account
+## 481  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 482                                  ... &lt; 0 DM unknown/no savings account
+## 483  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 484  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 485  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 486  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 487  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 488                                  ... &lt; 0 DM unknown/no savings account
+## 489  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 490  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 491  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 492  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 493                         no checking account unknown/no savings account
+## 494  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 495                         no checking account unknown/no savings account
+## 496  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 497  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 498  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 499  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 500                         no checking account       100 &lt;= ... &lt;  500 DM
+## 501  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 502  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 503  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 504  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 505  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 506  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 507  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 508  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 509  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 510                         no checking account              ... &lt;  100 DM
+## 511  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 512  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 513                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 514                                  ... &lt; 0 DM unknown/no savings account
+## 515  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 516                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 517                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 518  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 519  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 520  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 521  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 522  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 523  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 524  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 525                                  ... &lt; 0 DM unknown/no savings account
+## 526  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 527                         no checking account unknown/no savings account
+## 528                                  ... &lt; 0 DM unknown/no savings account
+## 529  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 530  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 531  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 532  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 533                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 534                         no checking account unknown/no savings account
+## 535                         no checking account unknown/no savings account
+## 536                                  ... &lt; 0 DM unknown/no savings account
+## 537  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 538  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 539  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 540                                  ... &lt; 0 DM unknown/no savings account
+## 541                                  ... &lt; 0 DM unknown/no savings account
+## 542                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 543                                  ... &lt; 0 DM unknown/no savings account
+## 544                                  ... &lt; 0 DM unknown/no savings account
+## 545  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 546                                  ... &lt; 0 DM unknown/no savings account
+## 547                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 548                            0&lt;= ... &lt; 200 DM             ... &gt;= 1000 DM
+## 549                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 550  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 551                                  ... &lt; 0 DM unknown/no savings account
+## 552  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 553  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 554  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 555                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 556  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 557                                  ... &lt; 0 DM       100 &lt;= ... &lt;  500 DM
+## 558                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 559  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 560                                  ... &lt; 0 DM       100 &lt;= ... &lt;  500 DM
+## 561  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 562  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 563                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 564                            0&lt;= ... &lt; 200 DM              ... &lt;  100 DM
+## 565  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 566                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 567                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 568  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 569  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 570  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 571                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 572  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 573                                  ... &lt; 0 DM unknown/no savings account
+## 574                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 575                                  ... &lt; 0 DM unknown/no savings account
+## 576                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 577                         no checking account unknown/no savings account
+## 578                         no checking account unknown/no savings account
+## 579                         no checking account       100 &lt;= ... &lt;  500 DM
+## 580                         no checking account             ... &gt;= 1000 DM
+## 581                         no checking account unknown/no savings account
+## 582                         no checking account              ... &lt;  100 DM
+## 583  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 584                         no checking account              ... &lt;  100 DM
+## 585                         no checking account unknown/no savings account
+## 586                         no checking account unknown/no savings account
+## 587                         no checking account unknown/no savings account
+## 588                         no checking account unknown/no savings account
+## 589                         no checking account unknown/no savings account
+## 590                                  ... &lt; 0 DM unknown/no savings account
+## 591                         no checking account unknown/no savings account
+## 592                         no checking account unknown/no savings account
+## 593                         no checking account unknown/no savings account
+## 594                         no checking account unknown/no savings account
+## 595                         no checking account unknown/no savings account
+## 596                         no checking account unknown/no savings account
+## 597                         no checking account unknown/no savings account
+## 598                         no checking account unknown/no savings account
+## 599                         no checking account unknown/no savings account
+## 600                         no checking account unknown/no savings account
+## 601                         no checking account unknown/no savings account
+## 602  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 603                         no checking account             ... &gt;= 1000 DM
+## 604                         no checking account unknown/no savings account
+## 605                         no checking account unknown/no savings account
+## 606                         no checking account unknown/no savings account
+## 607                                  ... &lt; 0 DM unknown/no savings account
+## 608                         no checking account unknown/no savings account
+## 609                         no checking account unknown/no savings account
+## 610                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 611                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 612                         no checking account unknown/no savings account
+## 613                         no checking account unknown/no savings account
+## 614                         no checking account unknown/no savings account
+## 615                         no checking account unknown/no savings account
+## 616                         no checking account unknown/no savings account
+## 617                         no checking account unknown/no savings account
+## 618                         no checking account              ... &lt;  100 DM
+## 619                         no checking account unknown/no savings account
+## 620                                  ... &lt; 0 DM unknown/no savings account
+## 621  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 622  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 623                         no checking account unknown/no savings account
+## 624                         no checking account unknown/no savings account
+## 625                         no checking account unknown/no savings account
+## 626                         no checking account unknown/no savings account
+## 627  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 628  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 629  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 630                         no checking account unknown/no savings account
+## 631                         no checking account unknown/no savings account
+## 632                         no checking account unknown/no savings account
+## 633                         no checking account unknown/no savings account
+## 634                         no checking account unknown/no savings account
+## 635                         no checking account unknown/no savings account
+## 636                         no checking account unknown/no savings account
+## 637                         no checking account unknown/no savings account
+## 638                         no checking account unknown/no savings account
+## 639                         no checking account unknown/no savings account
+## 640                         no checking account unknown/no savings account
+## 641                         no checking account unknown/no savings account
+## 642                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 643                         no checking account unknown/no savings account
+## 644                         no checking account unknown/no savings account
+## 645  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 646                         no checking account unknown/no savings account
+## 647  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 648  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 649                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 650                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 651                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 652                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 653                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 654  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 655                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 656                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 657                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 658                                  ... &lt; 0 DM unknown/no savings account
+## 659                                  ... &lt; 0 DM unknown/no savings account
+## 660                                  ... &lt; 0 DM unknown/no savings account
+## 661                                  ... &lt; 0 DM unknown/no savings account
+## 662                                  ... &lt; 0 DM unknown/no savings account
+## 663                                  ... &lt; 0 DM unknown/no savings account
+## 664                                  ... &lt; 0 DM unknown/no savings account
+## 665                         no checking account unknown/no savings account
+## 666                                  ... &lt; 0 DM unknown/no savings account
+## 667                                  ... &lt; 0 DM unknown/no savings account
+## 668                                  ... &lt; 0 DM unknown/no savings account
+## 669                                  ... &lt; 0 DM unknown/no savings account
+## 670                                  ... &lt; 0 DM unknown/no savings account
+## 671                                  ... &lt; 0 DM unknown/no savings account
+## 672                                  ... &lt; 0 DM unknown/no savings account
+## 673                                  ... &lt; 0 DM unknown/no savings account
+## 674                                  ... &lt; 0 DM unknown/no savings account
+## 675                                  ... &lt; 0 DM unknown/no savings account
+## 676                            0&lt;= ... &lt; 200 DM              ... &lt;  100 DM
+## 677                         no checking account unknown/no savings account
+## 678                                  ... &lt; 0 DM unknown/no savings account
+## 679                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 680                                  ... &lt; 0 DM unknown/no savings account
+## 681                                  ... &lt; 0 DM unknown/no savings account
+## 682                                  ... &lt; 0 DM unknown/no savings account
+## 683                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 684                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 685                         no checking account unknown/no savings account
+## 686  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 687                                  ... &lt; 0 DM unknown/no savings account
+## 688                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 689                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 690                         no checking account              ... &lt;  100 DM
+## 691  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 692                         no checking account unknown/no savings account
+## 693                                  ... &lt; 0 DM unknown/no savings account
+## 694  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 695  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 696  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 697                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 698  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 699                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 700                         no checking account       500 &lt;= ... &lt; 1000 DM
+## 701                         no checking account             ... &gt;= 1000 DM
+## 702                                  ... &lt; 0 DM unknown/no savings account
+## 703                         no checking account             ... &gt;= 1000 DM
+## 704                         no checking account       500 &lt;= ... &lt; 1000 DM
+## 705                         no checking account             ... &gt;= 1000 DM
+## 706  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 707                            0&lt;= ... &lt; 200 DM             ... &gt;= 1000 DM
+## 708                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 709                         no checking account unknown/no savings account
+## 710  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 711  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 712                         no checking account unknown/no savings account
+## 713  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 714  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 715  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 716  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 717                         no checking account unknown/no savings account
+## 718  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 719                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 720                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 721                                  ... &lt; 0 DM unknown/no savings account
+## 722                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 723  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 724  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 725                         no checking account unknown/no savings account
+## 726                                  ... &lt; 0 DM unknown/no savings account
+## 727  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 728  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 729  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 730                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 731                                  ... &lt; 0 DM unknown/no savings account
+## 732  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 733  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 734                         no checking account unknown/no savings account
+## 735                         no checking account unknown/no savings account
+## 736  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 737                                  ... &lt; 0 DM unknown/no savings account
+## 738  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 739                                  ... &lt; 0 DM unknown/no savings account
+## 740                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 741  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 742  ... &gt;= 200 DM / salary for at least 1 year       500 &lt;= ... &lt; 1000 DM
+## 743                         no checking account             ... &gt;= 1000 DM
+## 744  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 745  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 746  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 747                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 748  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 749                                  ... &lt; 0 DM unknown/no savings account
+## 750                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 751                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 752                         no checking account unknown/no savings account
+## 753                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 754                                  ... &lt; 0 DM       100 &lt;= ... &lt;  500 DM
+## 755                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 756                         no checking account unknown/no savings account
+## 757                         no checking account unknown/no savings account
+## 758                         no checking account unknown/no savings account
+## 759                                  ... &lt; 0 DM unknown/no savings account
+## 760                                  ... &lt; 0 DM unknown/no savings account
+## 761                                  ... &lt; 0 DM unknown/no savings account
+## 762                         no checking account unknown/no savings account
+## 763  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 764                                  ... &lt; 0 DM unknown/no savings account
+## 765  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 766  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 767                                  ... &lt; 0 DM unknown/no savings account
+## 768  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 769                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 770                         no checking account             ... &gt;= 1000 DM
+## 771                         no checking account unknown/no savings account
+## 772                         no checking account unknown/no savings account
+## 773                         no checking account unknown/no savings account
+## 774                         no checking account unknown/no savings account
+## 775                         no checking account unknown/no savings account
+## 776                         no checking account unknown/no savings account
+## 777                                  ... &lt; 0 DM unknown/no savings account
+## 778                         no checking account unknown/no savings account
+## 779                                  ... &lt; 0 DM unknown/no savings account
+## 780  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 781                                  ... &lt; 0 DM unknown/no savings account
+## 782                         no checking account unknown/no savings account
+## 783                                  ... &lt; 0 DM unknown/no savings account
+## 784                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 785                         no checking account unknown/no savings account
+## 786  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 787                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 788                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 789                                  ... &lt; 0 DM unknown/no savings account
+## 790                                  ... &lt; 0 DM unknown/no savings account
+## 791                                  ... &lt; 0 DM unknown/no savings account
+## 792                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 793                         no checking account unknown/no savings account
+## 794                         no checking account unknown/no savings account
+## 795                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 796                                  ... &lt; 0 DM unknown/no savings account
+## 797                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 798                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 799                         no checking account             ... &gt;= 1000 DM
+## 800                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 801                         no checking account             ... &gt;= 1000 DM
+## 802                         no checking account             ... &gt;= 1000 DM
+## 803                         no checking account             ... &gt;= 1000 DM
+## 804                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 805                         no checking account             ... &gt;= 1000 DM
+## 806                         no checking account unknown/no savings account
+## 807                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 808                         no checking account unknown/no savings account
+## 809                         no checking account unknown/no savings account
+## 810                         no checking account unknown/no savings account
+## 811                                  ... &lt; 0 DM unknown/no savings account
+## 812                         no checking account unknown/no savings account
+## 813  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 814                         no checking account unknown/no savings account
+## 815                                  ... &lt; 0 DM unknown/no savings account
+## 816  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 817                            0&lt;= ... &lt; 200 DM              ... &lt;  100 DM
+## 818                         no checking account unknown/no savings account
+## 819                                  ... &lt; 0 DM unknown/no savings account
+## 820  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 821                                  ... &lt; 0 DM       500 &lt;= ... &lt; 1000 DM
+## 822                         no checking account unknown/no savings account
+## 823                         no checking account unknown/no savings account
+## 824                         no checking account unknown/no savings account
+## 825                         no checking account unknown/no savings account
+## 826                                  ... &lt; 0 DM unknown/no savings account
+## 827                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 828                         no checking account unknown/no savings account
+## 829                                  ... &lt; 0 DM unknown/no savings account
+## 830                                  ... &lt; 0 DM unknown/no savings account
+## 831                                  ... &lt; 0 DM unknown/no savings account
+## 832  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 833  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 834                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 835  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 836                                  ... &lt; 0 DM unknown/no savings account
+## 837  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 838                                  ... &lt; 0 DM unknown/no savings account
+## 839  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 840  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 841                         no checking account             ... &gt;= 1000 DM
+## 842                                  ... &lt; 0 DM unknown/no savings account
+## 843  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 844                                  ... &lt; 0 DM unknown/no savings account
+## 845                                  ... &lt; 0 DM unknown/no savings account
+## 846                                  ... &lt; 0 DM       100 &lt;= ... &lt;  500 DM
+## 847                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 848                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 849                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 850                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 851                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 852                         no checking account unknown/no savings account
+## 853                                  ... &lt; 0 DM unknown/no savings account
+## 854                            0&lt;= ... &lt; 200 DM             ... &gt;= 1000 DM
+## 855  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 856                         no checking account unknown/no savings account
+## 857                         no checking account       100 &lt;= ... &lt;  500 DM
+## 858                         no checking account unknown/no savings account
+## 859                         no checking account unknown/no savings account
+## 860                         no checking account              ... &lt;  100 DM
+## 861  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 862                         no checking account unknown/no savings account
+## 863                                  ... &lt; 0 DM unknown/no savings account
+## 864  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 865                         no checking account unknown/no savings account
+## 866                            0&lt;= ... &lt; 200 DM             ... &gt;= 1000 DM
+## 867                                  ... &lt; 0 DM unknown/no savings account
+## 868                                  ... &lt; 0 DM unknown/no savings account
+## 869                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 870                                  ... &lt; 0 DM unknown/no savings account
+## 871                         no checking account unknown/no savings account
+## 872  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 873  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 874  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 875                                  ... &lt; 0 DM unknown/no savings account
+## 876                                  ... &lt; 0 DM unknown/no savings account
+## 877                                  ... &lt; 0 DM unknown/no savings account
+## 878                         no checking account unknown/no savings account
+## 879                         no checking account unknown/no savings account
+## 880                         no checking account             ... &gt;= 1000 DM
+## 881                         no checking account unknown/no savings account
+## 882                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 883                         no checking account unknown/no savings account
+## 884                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 885                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 886                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 887                         no checking account unknown/no savings account
+## 888                         no checking account unknown/no savings account
+## 889                         no checking account unknown/no savings account
+## 890                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 891                                  ... &lt; 0 DM unknown/no savings account
+## 892                         no checking account unknown/no savings account
+## 893                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 894                         no checking account unknown/no savings account
+## 895                                  ... &lt; 0 DM unknown/no savings account
+## 896                                  ... &lt; 0 DM unknown/no savings account
+## 897  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 898  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 899                                  ... &lt; 0 DM unknown/no savings account
+## 900  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 901                         no checking account unknown/no savings account
+## 902                         no checking account unknown/no savings account
+## 903                                  ... &lt; 0 DM unknown/no savings account
+## 904                         no checking account unknown/no savings account
+## 905                         no checking account unknown/no savings account
+## 906                         no checking account unknown/no savings account
+## 907                         no checking account unknown/no savings account
+## 908                         no checking account unknown/no savings account
+## 909                         no checking account unknown/no savings account
+## 910                         no checking account unknown/no savings account
+## 911                         no checking account unknown/no savings account
+## 912                         no checking account unknown/no savings account
+## 913                         no checking account unknown/no savings account
+## 914                         no checking account unknown/no savings account
+## 915                         no checking account unknown/no savings account
+## 916                         no checking account unknown/no savings account
+## 917                         no checking account unknown/no savings account
+## 918                                  ... &lt; 0 DM unknown/no savings account
+## 919                         no checking account unknown/no savings account
+## 920                         no checking account unknown/no savings account
+## 921                         no checking account unknown/no savings account
+## 922                         no checking account unknown/no savings account
+## 923                         no checking account unknown/no savings account
+## 924                         no checking account unknown/no savings account
+## 925                         no checking account unknown/no savings account
+## 926                         no checking account unknown/no savings account
+## 927                         no checking account unknown/no savings account
+## 928                         no checking account unknown/no savings account
+## 929                         no checking account unknown/no savings account
+## 930                                  ... &lt; 0 DM unknown/no savings account
+## 931                                  ... &lt; 0 DM unknown/no savings account
+## 932                         no checking account unknown/no savings account
+## 933                                  ... &lt; 0 DM unknown/no savings account
+## 934                         no checking account unknown/no savings account
+## 935                         no checking account unknown/no savings account
+## 936                         no checking account unknown/no savings account
+## 937                                  ... &lt; 0 DM unknown/no savings account
+## 938                                  ... &lt; 0 DM unknown/no savings account
+## 939                                  ... &lt; 0 DM unknown/no savings account
+## 940                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 941  ... &gt;= 200 DM / salary for at least 1 year       100 &lt;= ... &lt;  500 DM
+## 942                                  ... &lt; 0 DM unknown/no savings account
+## 943  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 944                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 945                         no checking account unknown/no savings account
+## 946                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 947  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 948  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 949                         no checking account unknown/no savings account
+## 950  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 951                                  ... &lt; 0 DM unknown/no savings account
+## 952                            0&lt;= ... &lt; 200 DM       100 &lt;= ... &lt;  500 DM
+## 953                                  ... &lt; 0 DM unknown/no savings account
+## 954  ... &gt;= 200 DM / salary for at least 1 year              ... &lt;  100 DM
+## 955                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 956                         no checking account unknown/no savings account
+## 957                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 958                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 959                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 960                                  ... &lt; 0 DM              ... &lt;  100 DM
+## 961  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 962                                  ... &lt; 0 DM unknown/no savings account
+## 963                                  ... &lt; 0 DM unknown/no savings account
+## 964                         no checking account unknown/no savings account
+## 965                                  ... &lt; 0 DM unknown/no savings account
+## 966                                  ... &lt; 0 DM unknown/no savings account
+## 967  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 968                         no checking account unknown/no savings account
+## 969                         no checking account unknown/no savings account
+## 970                         no checking account             ... &gt;= 1000 DM
+## 971  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 972                                  ... &lt; 0 DM unknown/no savings account
+## 973                            0&lt;= ... &lt; 200 DM unknown/no savings account
+## 974                         no checking account unknown/no savings account
+## 975                         no checking account unknown/no savings account
+## 976                         no checking account unknown/no savings account
+## 977                                  ... &lt; 0 DM unknown/no savings account
+## 978                         no checking account unknown/no savings account
+## 979                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 980                         no checking account unknown/no savings account
+## 981                                  ... &lt; 0 DM unknown/no savings account
+## 982  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 983                                  ... &lt; 0 DM unknown/no savings account
+## 984                         no checking account unknown/no savings account
+## 985                         no checking account unknown/no savings account
+## 986  ... &gt;= 200 DM / salary for at least 1 year unknown/no savings account
+## 987                         no checking account unknown/no savings account
+## 988                         no checking account              ... &lt;  100 DM
+## 989                         no checking account unknown/no savings account
+## 990                                  ... &lt; 0 DM unknown/no savings account
+## 991                         no checking account unknown/no savings account
+## 992                                  ... &lt; 0 DM unknown/no savings account
+## 993                         no checking account             ... &gt;= 1000 DM
+## 994                         no checking account unknown/no savings account
+## 995                         no checking account unknown/no savings account
+## 996                         no checking account unknown/no savings account
+## 997                         no checking account unknown/no savings account
+## 998  ... &gt;= 200 DM / salary for at least 1 year             ... &gt;= 1000 DM
+## 999                                  ... &lt; 0 DM             ... &gt;= 1000 DM
+## 1000                        no checking account             ... &gt;= 1000 DM
+##      amount age credit_risk
+## 1      1049  21        good
+## 2      2799  36        good
+## 3       841  23        good
+## 4      2122  39        good
+## 5      2171  38        good
+## 6      2241  48        good
+## 7      3398  39        good
+## 8      1361  40        good
+## 9      1098  65        good
+## 10     3758  23        good
+## 11     3905  36        good
+## 12     6187  24        good
+## 13     1957  31        good
+## 14     7582  31        good
+## 15     1936  23        good
+## 16     2647  44        good
+## 17     3939  40        good
+## 18     3213  25        good
+## 19     2337  36        good
+## 20     7228  39        good
+## 21     3676  37        good
+## 22     3124  49        good
+## 23     2384  33         bad
+## 24     1424  26        good
+## 25     4716  44        good
+## 26     4771  51        good
+## 27      652  24        good
+## 28     1154  37        good
+## 29     3556  29        good
+## 30     4796  56        good
+## 31     3017  47        good
+## 32     3535  37        good
+## 33     6614  34        good
+## 34     1376  28        good
+## 35     1721  36        good
+## 36      860  39        good
+## 37     1495  38        good
+## 38     1934  26        good
+## 39     3378  31        good
+## 40     3868  41        good
+## 41      996  23        good
+## 42     1755  58        good
+## 43     1028  36        good
+## 44     2825  34        good
+## 45     1239  61        good
+## 46     1216  23         bad
+## 47     1258  25        good
+## 48     1864  30         bad
+## 49     1474  33        good
+## 50     1382  26        good
+## 51      640  49        good
+## 52     3919  23        good
+## 53     1224  30        good
+## 54     2331  49        good
+## 55     6313  41        good
+## 56      385  58        good
+## 57     1655  63        good
+## 58     1053  27        good
+## 59     3160  41        good
+## 60     3079  36        good
+## 61     1163  44        good
+## 62     2679  29        good
+## 63     3578  47        good
+## 64    10875  45        good
+## 65     1344  43        good
+## 66     1237  27        good
+## 67     3077  52        good
+## 68     2284  28        good
+## 69     1567  22        good
+## 70     2032  60        good
+## 71     2745  32        good
+## 72     1867  58        good
+## 73     2299  39        good
+## 74      929  31        good
+## 75     3399  37        good
+## 76     2030  24        good
+## 77     3275  36        good
+## 78     1940  60        good
+## 79     1602  30        good
+## 80     1979  35        good
+## 81     2022  37        good
+## 82     3342  51        good
+## 83     5866  30        good
+## 84     2360  36        good
+## 85     1520  63        good
+## 86     3651  31        good
+## 87     2346  35        good
+## 88     4454  34        good
+## 89      666  39        good
+## 90     1965  42        good
+## 91     1995  27        good
+## 92     2991  25        good
+## 93     4221  28        good
+## 94     1364  59        good
+## 95     6361  41        good
+## 96     4526  32        good
+## 97     3573  23        good
+## 98     4455  30         bad
+## 99     2136  25        good
+## 100    5954  41        good
+## 101    3777  40        good
+## 102     806  22        good
+## 103    4712  34        good
+## 104    7432  54        good
+## 105    1851  33        good
+## 106    1393  31        good
+## 107    1412  29        good
+## 108    1473  39        good
+## 109    1533  38        good
+## 110    2012  61        good
+## 111    3959  29         bad
+## 112     428  49        good
+## 113    2366  36        good
+## 114     763  26        good
+## 115    3976  35        good
+## 116    6260  28        good
+## 117    1919  35        good
+## 118    2603  28        good
+## 119     936  52        good
+## 120    3062  32        good
+## 121    4795  30        good
+## 122    5842  35        good
+## 123    2063  30        good
+## 124    1459  43        good
+## 125    1213  47        good
+## 126    5103  47        good
+## 127     874  24        good
+## 128    2978  32        good
+## 129    1820  30        good
+## 130    2872  36        good
+## 131    1925  26        good
+## 132    2515  43        good
+## 133    2116  41        good
+## 134    1453  26        good
+## 135    1364  64        good
+## 136    1543  33        good
+## 137    1318  54        good
+## 138    2325  32        good
+## 139     932  39        good
+## 140    3148  31        good
+## 141    3835  45        good
+## 142    3832  64        good
+## 143    5084  42        good
+## 144    2406  31        good
+## 145    2394  25        good
+## 146    2476  46        good
+## 147    2964  49        good
+## 148    1262  49        good
+## 149    1542  36        good
+## 150    1743  48        good
+## 151     409  42        good
+## 152    2171  29        good
+## 153    8858  35        good
+## 154    3512  38        good
+## 155    1158  26        good
+## 156    2684  35        good
+## 157    1498  23        good
+## 158    5954  38        good
+## 159    6416  59         bad
+## 160    3617  28        good
+## 161    1291  35        good
+## 162    1275  36        good
+## 163    3972  25        good
+## 164    3343  28        good
+## 165     392  23        good
+## 166    2134  48        good
+## 167    5771  25        good
+## 168    4526  74        good
+## 169    2788  24        good
+## 170    1382  28        good
+## 171    5848  24        good
+## 172    1228  24         bad
+## 173    1297  23        good
+## 174    1552  32        good
+## 175    1963  31        good
+## 176    3235  36        good
+## 177    4139  27        good
+## 178    1804  44        good
+## 179    1950  34        good
+## 180   12749  37        good
+## 181    1236  23        good
+## 182    1055  30        good
+## 183    8072  25        good
+## 184    2831  33        good
+## 185    1449  27        good
+## 186    5742  31        good
+## 187    2390  50        good
+## 188    3430  31        good
+## 189    2273  32        good
+## 190    2923  28        good
+## 191    1901  29        good
+## 192    3711  27        good
+## 193    8487  24        good
+## 194    2255  54        good
+## 195    1262  25        good
+## 196    7253  35        good
+## 197    6761  45        good
+## 198    1817  28        good
+## 199    2141  35        good
+## 200    3609  27        good
+## 201    2333  30        good
+## 202    7824  40        good
+## 203    1445  49        good
+## 204    7721  30        good
+## 205    3763  24        good
+## 206    4439  33        good
+## 207    1107  20        good
+## 208    1444  23        good
+## 209   12169  36        good
+## 210    2753  35        good
+## 211    1494  29        good
+## 212    2828  22        good
+## 213    2483  22        good
+## 214    1299  74        good
+## 215    1549  35        good
+## 216    3949  37        good
+## 217    2901  31        good
+## 218     709  27        good
+## 219   10722  35        good
+## 220    1287  45        good
+## 221    1940  36        good
+## 222    3656  49        good
+## 223    4679  35        good
+## 224    8613  27        good
+## 225    2659  28        good
+## 226    1516  43        good
+## 227    4380  35        good
+## 228     802  27        good
+## 229    1572  36        good
+## 230    3566  30        good
+## 231    1278  36        good
+## 232     426  39        good
+## 233    8588  45        good
+## 234    3857  40        good
+## 235     685  25         bad
+## 236    1603  55        good
+## 237    2241  50        good
+## 238    2384  64        good
+## 239     601  23        good
+## 240    2569  24        good
+## 241    1316  47        good
+## 242   10366  42        good
+## 243    1568  24        good
+## 244     629  32        good
+## 245    1750  45        good
+## 246    3488  23        good
+## 247    1800  24        good
+## 248    4151  35        good
+## 249    2631  25        good
+## 250    5248  26        good
+## 251    2899  43        good
+## 252    6204  44        good
+## 253     804  38        good
+## 254    3595  28        good
+## 255    5711  38        good
+## 256    2687  26        good
+## 257    3643  27        good
+## 258    2146  23        good
+## 259    2315  52        good
+## 260    3448  74        good
+## 261    2708  27        good
+## 262    1393  35        good
+## 263    1275  23        good
+## 264    1313  20        good
+## 265    1493  34        good
+## 266    2675  40        good
+## 267    2118  37        good
+## 268     909  36        good
+## 269    1258  22        good
+## 270    1569  34        good
+## 271    1236  50        good
+## 272    7678  40        good
+## 273     660  23        good
+## 274    2835  53        good
+## 275    2670  35        good
+## 276    3447  35        good
+## 277    3568  54        good
+## 278    3652  27        good
+## 279    3660  28        good
+## 280    1126  49        good
+## 281     683  29        good
+## 282    2251  46        good
+## 283    4675  20        good
+## 284    2353  47        good
+## 285    3357  29        good
+## 286     672  54        good
+## 287     338  52        good
+## 288    2697  32        good
+## 289    2507  51        good
+## 290    1478  33        good
+## 291    3565  37        good
+## 292    2221  20        good
+## 293    1898  34        good
+## 294    1449  31        good
+## 295     960  30        good
+## 296    8133  30        good
+## 297    2301  22        good
+## 298    1743  34        good
+## 299     983  19        good
+## 300    2320  34        good
+## 301     339  45        good
+## 302    5152  25        good
+## 303    3749  26        good
+## 304    3074  33        good
+## 305     745  28         bad
+## 306    1469  41        good
+## 307    1374  36        good
+## 308     783  26        good
+## 309    2606  28        good
+## 310    9436  39        good
+## 311     930  65        good
+## 312    2751  38        good
+## 313     250  41        good
+## 314    1201  26        good
+## 315     662  41        good
+## 316    1300  45        good
+## 317    1559  40        good
+## 318    3016  24        good
+## 319    1360  31        good
+## 320    1204  35        good
+## 321    1597  40        good
+## 322    2073  28        good
+## 323    2142  28        good
+## 324    2132  27        good
+## 325    1546  31        good
+## 326    1287  37        good
+## 327    1418  35        good
+## 328    1343  46        good
+## 329    2662  32        good
+## 330    6070  33        good
+## 331    1927  33        good
+## 332    2404  26        good
+## 333    1554  24        good
+## 334    1283  25        good
+## 335     717  54        good
+## 336    1747  24        good
+## 337    1288  48        good
+## 338    1038  49        good
+## 339    2848  32        good
+## 340    1413  55        good
+## 341    3077  40        good
+## 342    3632  22        good
+## 343    3229  38        good
+## 344    3577  26        good
+## 345     682  51        good
+## 346    1924  38        good
+## 347     727  46        good
+## 348     781  63        good
+## 349    2121  30        good
+## 350     701  32        good
+## 351    2069  26        good
+## 352    1525  34        good
+## 353    7629  46        good
+## 354    3499  29         bad
+## 355    1346  42        good
+## 356   10477  42        good
+## 357    2924  63        good
+## 358    1231  32        good
+## 359    1961  23        good
+## 360    5045  59        good
+## 361    1255  61        good
+## 362    1858  22        good
+## 363    1221  27        good
+## 364    1388  26        good
+## 365    2279  37        good
+## 366    2759  34        good
+## 367    1258  57        good
+## 368    1410  31        good
+## 369    1403  28        good
+## 370    3021  24        good
+## 371    6568  21        good
+## 372    2578  34        good
+## 373    7758  29        good
+## 374     343  27        good
+## 375    1591  34        good
+## 376    3416  27        good
+## 377    1108  28         bad
+## 378    5965  30        good
+## 379    1514  22        good
+## 380    6742  36        good
+## 381    3650  22        good
+## 382    3599  26        good
+## 383   13756  63        good
+## 384     276  22        good
+## 385    4041  36        good
+## 386     458  24        good
+## 387     918  30         bad
+## 388    7393  43        good
+## 389    1225  37        good
+## 390    2812  26        good
+## 391    3029  33        good
+## 392    1480  66        good
+## 393    1047  50        good
+## 394    1471  35        good
+## 395    5511  25        good
+## 396    1206  25        good
+## 397    6403  33        good
+## 398     707  30        good
+## 399    1503  41        good
+## 400    6078  32        good
+## 401    2528  32        good
+## 402    1037  39        good
+## 403    1352  23        good
+## 404    3181  26        good
+## 405    4594  32        good
+## 406    5381  40        good
+## 407    4657  30        good
+## 408    1391  27        good
+## 409    1913  36        good
+## 410    7166  29        good
+## 411    1409  64        good
+## 412    2978  32        good
+## 413     976  35        good
+## 414    2375  44        good
+## 415     522  42        good
+## 416    2743  29        good
+## 417    1154  57        good
+## 418    5804  27        good
+## 419    1169  29        good
+## 420    1478  44        good
+## 421     776  28        good
+## 422    1322  40        good
+## 423    1175  68        good
+## 424    2133  52        good
+## 425    1829  46        good
+## 426     717  52        good
+## 427   11760  32        good
+## 428    1501  34         bad
+## 429    1200  23        good
+## 430    3195  33        good
+## 431    4530  26        good
+## 432    1555  55         bad
+## 433    2326  27        good
+## 434    1887  28        good
+## 435    1264  57        good
+## 436     846  36        good
+## 437    1532  31        good
+## 438     935  24        good
+## 439    2442  43        good
+## 440    3590  40        good
+## 441    2288  23        good
+## 442    5117  26        good
+## 443   14179  30        good
+## 444    1386  40        good
+## 445     618  56        good
+## 446    1574  50        good
+## 447     700  36        good
+## 448     886  21        good
+## 449    4686  32        good
+## 450     790  66        good
+## 451     766  66         bad
+## 452    2212  39        good
+## 453    7308  70        good
+## 454    5743  24        good
+## 455    3973  22        good
+## 456    7418  27        good
+## 457    2629  29        good
+## 458    1941  35        good
+## 459    2333  29        good
+## 460    2445  26        good
+## 461    6468  60        good
+## 462    7374  40        good
+## 463    3812  23        good
+## 464    4006  45         bad
+## 465    7472  24        good
+## 466    1424  55        good
+## 467    2028  30        good
+## 468    5324  35        good
+## 469    2323  24        good
+## 470    1393  47        good
+## 471    1984  47        good
+## 472     999  25        good
+## 473    7409  37        good
+## 474    2186  33        good
+## 475    4473  31        good
+## 476     937  27        good
+## 477    3422  47        good
+## 478    3105  25        good
+## 479    2748  57        good
+## 480    3872  67        good
+## 481    5190  48        good
+## 482    3001  40        good
+## 483    3863  32        good
+## 484    5801  49        good
+## 485    1592  35        good
+## 486    1185  27        good
+## 487    3780  35        good
+## 488    3612  37        good
+## 489    1076  26        good
+## 490    3527  45        good
+## 491    2051  33        good
+## 492    3331  42        good
+## 493    3104  31        good
+## 494    2611  46        good
+## 495    1409  54        good
+## 496    1311  26        good
+## 497    2108  29        good
+## 498    4042  43        good
+## 499     926  38        good
+## 500    1680  35        good
+## 501    1249  28        good
+## 502    2463  27        good
+## 503    1595  51        good
+## 504    2058  33        good
+## 505    7814  38        good
+## 506    1740  30        good
+## 507    1240  38        good
+## 508    6842  46        good
+## 509    5150  33        good
+## 510    1203  43        good
+## 511    2080  24        good
+## 512    1538  56        good
+## 513    3878  37        good
+## 514    3832  22        good
+## 515    3186  20        good
+## 516    2896  29        good
+## 517    6967  36        good
+## 518    1819  37         bad
+## 519    5943  44         bad
+## 520    7127  23         bad
+## 521    3349  28         bad
+## 522   10974  26         bad
+## 523     518  29        good
+## 524    1126  21        good
+## 525    1860  34        good
+## 526    9566  31        good
+## 527     701  40        good
+## 528    2930  27        good
+## 529    1505  32        good
+## 530    2238  25        good
+## 531    1503  42        good
+## 532    2197  43        good
+## 533    1881  44        good
+## 534    1880  32        good
+## 535    2389  27        good
+## 536    1967  20        good
+## 537    3380  37        good
+## 538    1455  42        good
+## 539     730  46        good
+## 540    3244  33        good
+## 541    1670  22         bad
+## 542    3979  41        good
+## 543    1922  37         bad
+## 544    1295  27        good
+## 545    1544  42        good
+## 546     907  26        good
+## 547    1715  26        good
+## 548    1347  27        good
+## 549    1007  22        good
+## 550    1402  37        good
+## 551    2002  30        good
+## 552    2096  49        good
+## 553    1101  27        good
+## 554     894  40        good
+## 555    1577  20        good
+## 556    2764  26        good
+## 557    8358  30        good
+## 558    1474  33        good
+## 559    5433  26        good
+## 560    1410  35        good
+## 561    3485  44        good
+## 562    3850  27        good
+## 563    7408  24         bad
+## 564    1377  47        good
+## 565    4272  26        good
+## 566    1553  23        good
+## 567    9857  31        good
+## 568     362  52        good
+## 569    1935  43        good
+## 570   10222  37        good
+## 571    1330  26        good
+## 572    9055  35        good
+## 573    7966  30        good
+## 574    3496  34        good
+## 575    6948  35        good
+## 576   12204  48        good
+## 577    3446  42         bad
+## 578     684  40         bad
+## 579    4281  23         bad
+## 580    7174  30         bad
+## 581    1546  24         bad
+## 582    2359  33         bad
+## 583    3621  31         bad
+## 584     741  22         bad
+## 585    7865  53         bad
+## 586    2910  34        good
+## 587    5302  36        good
+## 588    3620  37        good
+## 589    3509  25        good
+## 590    3017  34        good
+## 591    1657  27        good
+## 592    1164  51        good
+## 593    6229  23         bad
+## 594    1193  29         bad
+## 595    4583  32        good
+## 596    5371  28        good
+## 597     708  38        good
+## 598     571  65        good
+## 599    2522  39        good
+## 600    5179  29         bad
+## 601    8229  26         bad
+## 602    2028  30        good
+## 603    1374  75        good
+## 604    1289  21        good
+## 605    2712  41         bad
+## 606     975  25        good
+## 607    1050  35        good
+## 608     609  37        good
+## 609    4788  26        good
+## 610    3069  30        good
+## 611     836  23         bad
+## 612    2577  42        good
+## 613    1620  30        good
+## 614    1845  46        good
+## 615    6579  29        good
+## 616    1893  29        good
+## 617   10623  38        good
+## 618    2249  30        good
+## 619    3108  31         bad
+## 620     958  47        good
+## 621    9277  48        good
+## 622    6314  27        good
+## 623    1526  66        good
+## 624    3590  29        good
+## 625    6615  75        good
+## 626    1872  36        good
+## 627    2859  38        good
+## 628    1582  46        good
+## 629    1238  36        good
+## 630    2578  55        good
+## 631    1433  25        good
+## 632    7882  45        good
+## 633    4169  28        good
+## 634    3959  30        good
+## 635    3249  39        good
+## 636    3149  22        good
+## 637    2246  60         bad
+## 638    1797  28        good
+## 639    4272  24        good
+## 640    2957  63        good
+## 641    2348  46        good
+## 642    6289  33        good
+## 643    6419  44        good
+## 644    6143  58         bad
+## 645    1597  54        good
+## 646   15857  43        good
+## 647    2223  52        good
+## 648    7238  32        good
+## 649    2503  41        good
+## 650    2622  34        good
+## 651    4351  48        good
+## 652     368  38        good
+## 653     754  38        good
+## 654    2424  53        good
+## 655    6681  38        good
+## 656    2427  42        good
+## 657    1216  38         bad
+## 658     753  64        good
+## 659    2576  35        good
+## 660     590  26        good
+## 661    1414  33        good
+## 662    1103  29        good
+## 663     585  20        good
+## 664    1068  28        good
+## 665     713  47        good
+## 666    1092  49        good
+## 667    2329  45        good
+## 668     882  23        good
+## 669     866  25        good
+## 670    2415  34        good
+## 671    2101  23        good
+## 672    1301  32        good
+## 673    1113  26        good
+## 674     760  44        good
+## 675     625  26        good
+## 676    1323  28        good
+## 677    1138  25        good
+## 678    1795  48        good
+## 679    2728  35        good
+## 680     484  28        good
+## 681    1048  23        good
+## 682    1155  40        good
+## 683    7057  36        good
+## 684    1537  50        good
+## 685    2214  24        good
+## 686    1585  40        good
+## 687    1521  31        good
+## 688    3990  29        good
+## 689    3049  45        good
+## 690    1282  32         bad
+## 691   10144  21        good
+## 692    1168  27        good
+## 693     454  22        good
+## 694    3594  46        good
+## 695    1768  24        good
+## 696   15653  21        good
+## 697    2247  36        good
+## 698    1413  28        good
+## 699    4576  27        good
+## 700    1231  57        good
+## 701    8335  47         bad
+## 702    5800  34        good
+## 703    8471  23        good
+## 704    3622  57        good
+## 705    1169  67        good
+## 706    1262  36        good
+## 707    3617  20        good
+## 708    2181  36        good
+## 709    7685  37         bad
+## 710    6110  31        good
+## 711    3757  62        good
+## 712    3394  65        good
+## 713    6304  36        good
+## 714    1244  41        good
+## 715    3518  26        good
+## 716    2613  27        good
+## 717    7476  50        good
+## 718    4591  54         bad
+## 719    1924  27         bad
+## 720    5595  24         bad
+## 721    6224  50         bad
+## 722    1905  40        good
+## 723    2993  28        good
+## 724    8947  31        good
+## 725    4020  27        good
+## 726    2779  21        good
+## 727    2782  31        good
+## 728    1884  39        good
+## 729   11054  30        good
+## 730    9157  27        good
+## 731    9283  55        good
+## 732    6527  34        good
+## 733    3368  23        good
+## 734    2511  23        good
+## 735    5493  42        good
+## 736    1338  62        good
+## 737    1082  37        good
+## 738    1149  46        good
+## 739    1308  38        good
+## 740    6148  31        good
+## 741    1736  31        good
+## 742    3059  61        good
+## 743    2996  20         bad
+## 744    7596  63        good
+## 745    4811  24        good
+## 746    1766  21        good
+## 747    2760  36        good
+## 748    5507  44        good
+## 749    1199  67        good
+## 750    2892  51        good
+## 751    2862  30        good
+## 752     654  28         bad
+## 753    1136  32         bad
+## 754    4113  28         bad
+## 755   14555  23         bad
+## 756     950  33         bad
+## 757    1199  60         bad
+## 758    1082  48         bad
+## 759    2150  24         bad
+## 760    2820  27         bad
+## 761    3060  28         bad
+## 762    2600  65         bad
+## 763    5003  29         bad
+## 764    6288  42         bad
+## 765    2538  47         bad
+## 766    1478  22         bad
+## 767    4933  25         bad
+## 768    1530  32         bad
+## 769    1437  29         bad
+## 770    1275  24         bad
+## 771    1823  30         bad
+## 772    1422  27         bad
+## 773    1217  47         bad
+## 774    9271  24         bad
+## 775    2145  24         bad
+## 776    1842  34         bad
+## 777    4297  40         bad
+## 778    3384  44         bad
+## 779    1245  33         bad
+## 780    4623  40         bad
+## 781    8386  49         bad
+## 782    1024  48         bad
+## 783   14318  57         bad
+## 784     433  24         bad
+## 785    2149  29         bad
+## 786    2397  35         bad
+## 787     931  32         bad
+## 788    1512  61         bad
+## 789    4241  36         bad
+## 790    4736  25         bad
+## 791    1778  26         bad
+## 792    2327  25         bad
+## 793    6872  55         bad
+## 794     795  53         bad
+## 795    1908  66         bad
+## 796    1953  61         bad
+## 797    2864  34         bad
+## 798    2319  33         bad
+## 799     915  29         bad
+## 800     947  38         bad
+## 801    1381  35         bad
+## 802    1285  32         bad
+## 803    1371  25         bad
+## 804    1042  33         bad
+## 805     900  23         bad
+## 806    1207  24         bad
+## 807    2278  28         bad
+## 808    6836  63         bad
+## 809    3345  39         bad
+## 810    1198  35         bad
+## 811   15672  23         bad
+## 812    7297  36         bad
+## 813    1943  23         bad
+## 814    3190  24         bad
+## 815    5129  74         bad
+## 816    1808  22         bad
+## 817    1240  48         bad
+## 818     759  26         bad
+## 819    1237  24         bad
+## 820    1980  19         bad
+## 821   10961  27         bad
+## 822    6887  29         bad
+## 823    1938  32         bad
+## 824    1835  25         bad
+## 825    1659  29         bad
+## 826    1209  47         bad
+## 827    3844  34         bad
+## 828    4843  43         bad
+## 829     639  30         bad
+## 830    5951  22         bad
+## 831    3804  42         bad
+## 832    4463  26         bad
+## 833    7980  27         bad
+## 834    4210  26         bad
+## 835    4611  32         bad
+## 836   11560  23         bad
+## 837    4165  36         bad
+## 838    4057  43         bad
+## 839    6458  39         bad
+## 840    1386  26         bad
+## 841    1977  40         bad
+## 842    1928  31         bad
+## 843    1123  29         bad
+## 844   11328  29         bad
+## 845   11938  39         bad
+## 846    2520  23         bad
+## 847    1919  30         bad
+## 848   14782  60         bad
+## 849    2671  50         bad
+## 850   12612  47         bad
+## 851    3031  21         bad
+## 852     626  24         bad
+## 853    1935  31         bad
+## 854    1344  37         bad
+## 855    1533  43         bad
+## 856    3931  46         bad
+## 857    3349  30         bad
+## 858    2302  31         bad
+## 859    3965  34         bad
+## 860     727  33         bad
+## 861    3914  38         bad
+## 862    4308  24         bad
+## 863    1534  23         bad
+## 864    2775  31         bad
+## 865    5998  27         bad
+## 866    1271  39         bad
+## 867    1295  25         bad
+## 868    9398  28         bad
+## 869     951  27         bad
+## 870    1355  25         bad
+## 871    3051  54         bad
+## 872    7855  25         bad
+## 873     433  22         bad
+## 874    9572  28         bad
+## 875    1837  34         bad
+## 876    4249  28         bad
+## 877    5234  28         bad
+## 878    6758  31         bad
+## 879    1366  22         bad
+## 880    1358  40         bad
+## 881    2473  25         bad
+## 882    1337  34         bad
+## 883    7763  42         bad
+## 884    1264  25         bad
+## 885    2631  28         bad
+## 886    6560  24         bad
+## 887    3123  27         bad
+## 888    8065  25         bad
+## 889    2439  35         bad
+## 890    9034  29         bad
+## 891   14027  27         bad
+## 892    9629  24         bad
+## 893    1484  25         bad
+## 894    1131  33         bad
+## 895    2064  34         bad
+## 896   12976  38         bad
+## 897    2580  41         bad
+## 898    2570  21         bad
+## 899    3915  36         bad
+## 900    1309  27         bad
+## 901    4817  31         bad
+## 902    2579  33         bad
+## 903    2225  57         bad
+## 904    4153  42         bad
+## 905    3114  26         bad
+## 906    2124  24         bad
+## 907    1553  44         bad
+## 908    2406  23         bad
+## 909    1333  43         bad
+## 910    7119  53         bad
+## 911    4870  53         bad
+## 912     691  35         bad
+## 913    4370  26         bad
+## 914    2746  31         bad
+## 915    4110  23         bad
+## 916    2462  22         bad
+## 917    1282  20         bad
+## 918    2969  25         bad
+## 919    4605  24         bad
+## 920    6331  46         bad
+## 921    3552  27         bad
+## 922     697  46         bad
+## 923    1442  23         bad
+## 924    5293  50         bad
+## 925    3414  26         bad
+## 926    2039  20         bad
+## 927    3161  31         bad
+## 928     902  21         bad
+## 929   10297  39         bad
+## 930   14421  25         bad
+## 931    1056  30         bad
+## 932    1274  37         bad
+## 933    1223  46         bad
+## 934    1372  36         bad
+## 935    2625  43         bad
+## 936    2235  33         bad
+## 937     959  29         bad
+## 938     884  36         bad
+## 939    1246  23         bad
+## 940    8086  42         bad
+## 941   10127  44         bad
+## 942     888  41         bad
+## 943     719  41         bad
+## 944   12389  37         bad
+## 945     709  57         bad
+## 946    6850  34         bad
+## 947    2210  25         bad
+## 948    7485  53         bad
+## 949    1442  32         bad
+## 950     797  33         bad
+## 951    4746  24         bad
+## 952     939  28         bad
+## 953    1188  39         bad
+## 954   11590  24         bad
+## 955     609  26         bad
+## 956    1190  55         bad
+## 957    2767  61         bad
+## 958    3441  21         bad
+## 959    4280  26         bad
+## 960    3092  22         bad
+## 961    6761  68         bad
+## 962    1331  22         bad
+## 963   15945  58         bad
+## 964    3234  23         bad
+## 965     802  37         bad
+## 966    9960  26         bad
+## 967    8648  27         bad
+## 968    1345  26         bad
+## 969    1845  23         bad
+## 970    1647  40         bad
+## 971    4844  33         bad
+## 972    8318  42         bad
+## 973    2100  37         bad
+## 974   11816  29         bad
+## 975     448  23         bad
+## 976   11998  34         bad
+## 977   18424  32         bad
+## 978   14896  68         bad
+## 979    2762  25         bad
+## 980    3386  35         bad
+## 981    2039  22         bad
+## 982    2169  28         bad
+## 983    5096  30         bad
+## 984    1882  25         bad
+## 985    6999  34         bad
+## 986    2292  42         bad
+## 987    8978  45         bad
+## 988     674  20         bad
+## 989     976  23         bad
+## 990    2718  20         bad
+## 991     750  27         bad
+## 992   12579  44         bad
+## 993    7511  51         bad
+## 994    3966  33         bad
+## 995    6199  28         bad
+## 996    1987  21         bad
+## 997    2303  45         bad
+## 998   12680  30         bad
+## 999    6468  52         bad
+## 1000   6350  31         bad</code></pre>
+<ul>
+<li>再按分类变量status分类</li>
+</ul>
+<pre class="r"><code>german %&gt;% 
+  select(status,savings,amount, age, credit_risk) %&gt;% 
+  group_by(status) </code></pre>
+<pre><code>## # A tibble: 1,000 x 5
+## # Groups:   status [4]
+##    status                          savings              amount   age credit_risk
+##    &lt;fct&gt;                           &lt;fct&gt;                 &lt;int&gt; &lt;int&gt; &lt;fct&gt;      
+##  1 no checking account             unknown/no savings …   1049    21 good       
+##  2 no checking account             unknown/no savings …   2799    36 good       
+##  3 ... &lt; 0 DM                      ... &lt;  100 DM           841    23 good       
+##  4 no checking account             unknown/no savings …   2122    39 good       
+##  5 no checking account             unknown/no savings …   2171    38 good       
+##  6 no checking account             unknown/no savings …   2241    48 good       
+##  7 no checking account             unknown/no savings …   3398    39 good       
+##  8 no checking account             unknown/no savings …   1361    40 good       
+##  9 ... &gt;= 200 DM / salary for at … unknown/no savings …   1098    65 good       
+## 10 ... &lt; 0 DM                      100 &lt;= ... &lt;  500 DM   3758    23 good       
+## # … with 990 more rows</code></pre>
+<ul>
+<li>并计算每一类的个数。</li>
+</ul>
+<pre class="r"><code>german %&gt;% 
+  select(status,savings,amount, age, credit_risk) %&gt;% 
+  group_by(status)</code></pre>
+<pre><code>## # A tibble: 1,000 x 5
+## # Groups:   status [4]
+##    status                          savings              amount   age credit_risk
+##    &lt;fct&gt;                           &lt;fct&gt;                 &lt;int&gt; &lt;int&gt; &lt;fct&gt;      
+##  1 no checking account             unknown/no savings …   1049    21 good       
+##  2 no checking account             unknown/no savings …   2799    36 good       
+##  3 ... &lt; 0 DM                      ... &lt;  100 DM           841    23 good       
+##  4 no checking account             unknown/no savings …   2122    39 good       
+##  5 no checking account             unknown/no savings …   2171    38 good       
+##  6 no checking account             unknown/no savings …   2241    48 good       
+##  7 no checking account             unknown/no savings …   3398    39 good       
+##  8 no checking account             unknown/no savings …   1361    40 good       
+##  9 ... &gt;= 200 DM / salary for at … unknown/no savings …   1098    65 good       
+## 10 ... &lt; 0 DM                      100 &lt;= ... &lt;  500 DM   3758    23 good       
+## # … with 990 more rows</code></pre>
+<p>通过tidyverse这样的工作流程，我们可以按照自己的思路一步一步的处理清洗我们的数据。</p>
+</div>
+<div id="数据导入导出" class="section level1">
+<h1>2. 数据导入/导出</h1>
+<ul>
+<li>数据读取</li>
+</ul>
+<p>这里建议使用rio包里的import函数导入。可以导入xlxs,.csv,.txt, SPSS, Stata, SAS等大部分的格式。</p>
+<p>当然每个格式也有单独对应的包，如readr可以用来读取csv,readxl读取xls,haven读取SPSS,Stat,SAS文件等。</p>
+<pre class="r"><code>library(rio)
+df = import(&quot;yourdirectory/data.csv&quot;)
+df = import(&quot;yourdirectory/data.xlxs&quot;)</code></pre>
+<ul>
+<li>数据导出</li>
+</ul>
+<p>同理这里推荐使用rio包里的export函数。</p>
+<pre class="r"><code>export(df, &quot;yourdirectory/name.csv&quot;)
+export(df, &quot;yourdirectory/name.xlxs&quot;)</code></pre>
+</div>
+<div id="tidyverse数据清洗处理流程" class="section level1">
+<h1>3. tidyverse数据清洗处理流程</h1>
+<p>这里主要介绍关于行列创建修改的基本操作，以及一些分组汇总知识。更多细节请查看。</p>
+<p><a href="https://zhuanlan.zhihu.com/p/198185888">R语言编程–基于tidyverse</a></p>
+<div id="选择列" class="section level2">
+<h2>3.1选择列</h2>
+<p>主要使用到的函数有 relocate/select</p>
+<ul>
+<li>select 选择所需要的列</li>
+<li>relocate 选择需要的列并排序，它保留了所有列，但为重新排序提供了更大的灵活性。</li>
+</ul>
+<pre class="r"><code>german %&gt;% select(status,credit_risk,job,age) %&gt;% glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 4
+## $ status      &lt;fct&gt; no checking account, no checking account, ... &lt; 0 DM, no c…
+## $ credit_risk &lt;fct&gt; good, good, good, good, good, good, good, good, good, good…
+## $ job         &lt;fct&gt; skilled employee/official, skilled employee/official, unsk…
+## $ age         &lt;int&gt; 21, 36, 23, 39, 38, 48, 39, 40, 65, 23, 36, 24, 31, 31, 23…</code></pre>
+<pre class="r"><code>german %&gt;% select(2,3,5,7) %&gt;% glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 4
+## $ duration            &lt;int&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6, 48…
+## $ credit_history      &lt;fct&gt; all credits at this bank paid back duly, all credi…
+## $ amount              &lt;int&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361, 109…
+## $ employment_duration &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 &lt;= .…</code></pre>
+<pre class="r"><code># 选取这些列排到最前面，保留剩余列
+german %&gt;% relocate(status,credit_risk,job,age) %&gt;% glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 21
+## $ status                  &lt;fct&gt; no checking account, no checking account, ... …
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…
+## $ job                     &lt;fct&gt; skilled employee/official, skilled employee/of…
+## $ age                     &lt;int&gt; 21, 36, 23, 39, 38, 48, 39, 40, 65, 23, 36, 24…
+## $ duration                &lt;int&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6…
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ amount                  &lt;int&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361,…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ employment_duration     &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 …
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ property                &lt;fct&gt; car or other, unknown / no property, unknown /…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ people_liable           &lt;fct&gt; 0 to 2, 3 or more, 0 to 2, 3 or more, 0 to 2, …
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, yes, yes, yes, yes, yes, no, no, n…</code></pre>
+<pre class="r"><code># 选取这些列，且以status-age 为顺序，age是倒数第三列。
+german %&gt;% relocate(status,credit_risk,job,age, .after = last_col(offset = 3)) %&gt;% glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 21
+## $ duration                &lt;int&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6…
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ amount                  &lt;int&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361,…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ employment_duration     &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 …
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ property                &lt;fct&gt; car or other, unknown / no property, unknown /…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ people_liable           &lt;fct&gt; 0 to 2, 3 or more, 0 to 2, 3 or more, 0 to 2, …
+## $ status                  &lt;fct&gt; no checking account, no checking account, ... …
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…
+## $ job                     &lt;fct&gt; skilled employee/official, skilled employee/of…
+## $ age                     &lt;int&gt; 21, 36, 23, 39, 38, 48, 39, 40, 65, 23, 36, 24…
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, yes, yes, yes, yes, yes, no, no, n…</code></pre>
+<ul>
+<li>使用函数选择</li>
+</ul>
+<pre class="r"><code>german %&gt;% select(starts_with(&quot;s&quot;)) %&gt;% glimpse() # 选择列名是以s开始的</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 2
+## $ status  &lt;fct&gt; no checking account, no checking account, ... &lt; 0 DM, no check…
+## $ savings &lt;fct&gt; unknown/no savings account, unknown/no savings account, ... &lt; …</code></pre>
+<pre class="r"><code>german %&gt;% select(ends_with(&quot;s&quot;)) %&gt;% glimpse() # 选择列名是以s结束的</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 5
+## $ status                  &lt;fct&gt; no checking account, no checking account, ... …
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…</code></pre>
+<pre class="r"><code>german %&gt;% select(contains(&quot;s&quot;)) %&gt;% glimpse() # 选择列名中包含s的</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 12
+## $ status                  &lt;fct&gt; no checking account, no checking account, ... …
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…</code></pre>
+<pre class="r"><code>german %&gt;% select(where(is.factor)) %&gt;% glimpse()  # 选择是列属性是factor的</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 18
+## $ status                  &lt;fct&gt; no checking account, no checking account, ... …
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ employment_duration     &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 …
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ property                &lt;fct&gt; car or other, unknown / no property, unknown /…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ job                     &lt;fct&gt; skilled employee/official, skilled employee/of…
+## $ people_liable           &lt;fct&gt; 0 to 2, 3 or more, 0 to 2, 3 or more, 0 to 2, …
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, yes, yes, yes, yes, yes, no, no, n…
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…</code></pre>
+<ul>
+<li>使用逻辑符选择</li>
+</ul>
+<pre class="r"><code># 选择这三列，并且这三列中是因子的
+german %&gt;% select(c(status,age,credit_risk) &amp; where(is.factor)) %&gt;% glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 2
+## $ status      &lt;fct&gt; no checking account, no checking account, ... &lt; 0 DM, no c…
+## $ credit_risk &lt;fct&gt; good, good, good, good, good, good, good, good, good, good…</code></pre>
+<pre class="r"><code># 不选择这age,status这两列
+german %&gt;% select(!c(age,status)) %&gt;% glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 19
+## $ duration                &lt;int&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6…
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ amount                  &lt;int&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361,…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ employment_duration     &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 …
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ property                &lt;fct&gt; car or other, unknown / no property, unknown /…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ job                     &lt;fct&gt; skilled employee/official, skilled employee/of…
+## $ people_liable           &lt;fct&gt; 0 to 2, 3 or more, 0 to 2, 3 or more, 0 to 2, …
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, yes, yes, yes, yes, yes, no, no, n…
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…</code></pre>
+<pre class="r"><code>german %&gt;% select(-c(age,status)) %&gt;% glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 19
+## $ duration                &lt;int&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6…
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ amount                  &lt;int&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361,…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ employment_duration     &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 …
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ property                &lt;fct&gt; car or other, unknown / no property, unknown /…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ job                     &lt;fct&gt; skilled employee/official, skilled employee/of…
+## $ people_liable           &lt;fct&gt; 0 to 2, 3 or more, 0 to 2, 3 or more, 0 to 2, …
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, yes, yes, yes, yes, yes, no, no, n…
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…</code></pre>
+</div>
+<div id="修改列" class="section level2">
+<h2>3.2 修改列</h2>
+<ul>
+<li>创建新列/修改新列/修改旧列 mutate</li>
+</ul>
+<pre class="r"><code>german %&gt;% 
+  # 创建新列age_mean计算age的均值，一般默认会把新列放在最后，.before=1使得放在第一列
+  mutate(age_mean = mean(age), .before = 1) %&gt;% 
+  # 也可以修改原有的列
+  mutate(age = age + 1) %&gt;% 
+  #也可以同时创建多个列，顺序是依次往后计算，所以前面创建的列可以在后面直接用。
+  mutate(duration_mean = mean(duration),
+         duration_median = median(duration),
+         duration_sd = sd(duration),
+         order = duration_mean &gt; duration_median,
+         order = as.numeric(order),
+         .before= 1) %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 26
+## $ duration_mean           &lt;dbl&gt; 20.903, 20.903, 20.903, 20.903, 20.903, 20.903…
+## $ duration_median         &lt;dbl&gt; 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18…
+## $ duration_sd             &lt;dbl&gt; 12.05881, 12.05881, 12.05881, 12.05881, 12.058…
+## $ order                   &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
+## $ age_mean                &lt;dbl&gt; 35.542, 35.542, 35.542, 35.542, 35.542, 35.542…
+## $ status                  &lt;fct&gt; no checking account, no checking account, ... …
+## $ duration                &lt;int&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6…
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ amount                  &lt;int&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361,…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ employment_duration     &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 …
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ property                &lt;fct&gt; car or other, unknown / no property, unknown /…
+## $ age                     &lt;dbl&gt; 22, 37, 24, 40, 39, 49, 40, 41, 66, 24, 37, 25…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ job                     &lt;fct&gt; skilled employee/official, skilled employee/of…
+## $ people_liable           &lt;fct&gt; 0 to 2, 3 or more, 0 to 2, 3 or more, 0 to 2, …
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, yes, yes, yes, yes, yes, no, no, n…
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…</code></pre>
+<ul>
+<li>同时修改多个列 across</li>
+</ul>
+<pre class="r"><code>german %&gt;%
+  # 将选定列转化为字符型
+  mutate(across(c(duration, age), as.character)) %&gt;% 
+  # 将每一列转化为数字型
+  mutate(across(everything(), as.numeric)) %&gt;% 
+  # 分别计算duration, age 列的均值和方差
+  mutate(across(c(duration, age),
+                .fns = list(mean = mean, stdev =sd)),
+         .before = 1) %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 25
+## $ duration_mean           &lt;dbl&gt; 20.903, 20.903, 20.903, 20.903, 20.903, 20.903…
+## $ duration_stdev          &lt;dbl&gt; 12.05881, 12.05881, 12.05881, 12.05881, 12.058…
+## $ age_mean                &lt;dbl&gt; 35.542, 35.542, 35.542, 35.542, 35.542, 35.542…
+## $ age_stdev               &lt;dbl&gt; 11.35267, 11.35267, 11.35267, 11.35267, 11.352…
+## $ status                  &lt;dbl&gt; 1, 1, 2, 1, 1, 1, 1, 1, 4, 2, 1, 1, 1, 2, 1, 1…
+## $ duration                &lt;dbl&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6…
+## $ credit_history          &lt;dbl&gt; 5, 5, 3, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 4, 3, 3…
+## $ purpose                 &lt;dbl&gt; 3, 1, 10, 1, 1, 1, 1, 1, 4, 4, 1, 2, 4, 11, 4,…
+## $ amount                  &lt;dbl&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361,…
+## $ savings                 &lt;dbl&gt; 1, 1, 2, 1, 1, 1, 1, 1, 1, 3, 1, 2, 1, 2, 5, 3…
+## $ employment_duration     &lt;dbl&gt; 2, 3, 4, 3, 3, 2, 4, 2, 1, 1, 3, 4, 4, 1, 4, 3…
+## $ installment_rate        &lt;dbl&gt; 4, 2, 2, 3, 4, 1, 1, 2, 4, 1, 2, 1, 1, 2, 2, 2…
+## $ personal_status_sex     &lt;dbl&gt; 2, 3, 2, 3, 3, 3, 3, 3, 2, 2, 3, 4, 2, 3, 4, 3…
+## $ other_debtors           &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
+## $ present_residence       &lt;dbl&gt; 4, 2, 4, 2, 4, 3, 4, 4, 4, 4, 2, 4, 4, 4, 4, 3…
+## $ property                &lt;dbl&gt; 2, 1, 1, 1, 2, 1, 1, 1, 3, 4, 1, 3, 3, 4, 3, 1…
+## $ age                     &lt;dbl&gt; 21, 36, 23, 39, 38, 48, 39, 40, 65, 23, 36, 24…
+## $ other_installment_plans &lt;dbl&gt; 3, 3, 3, 3, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3…
+## $ housing                 &lt;dbl&gt; 1, 1, 1, 1, 2, 1, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1…
+## $ number_credits          &lt;dbl&gt; 1, 2, 1, 2, 2, 2, 2, 1, 2, 1, 2, 2, 1, 1, 2, 1…
+## $ job                     &lt;dbl&gt; 3, 3, 2, 2, 2, 2, 2, 2, 1, 1, 3, 3, 3, 4, 2, 3…
+## $ people_liable           &lt;dbl&gt; 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2, 2, 2, 1…
+## $ telephone               &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1…
+## $ foreign_worker          &lt;dbl&gt; 2, 2, 2, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2…
+## $ credit_risk             &lt;dbl&gt; 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2…</code></pre>
+<pre class="r"><code>german %&gt;% 
+  group_by(status) %&gt;% 
+  summarise(
+    across(c(duration,age), .fns = list(mean = mean, stdev = sd)),
+    .groups = &quot;drop&quot;
+  ) %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 4
+## Columns: 5
+## $ status         &lt;fct&gt; no checking account, ... &lt; 0 DM, 0&lt;= ... &lt; 200 DM, ... …
+## $ duration_mean  &lt;dbl&gt; 21.33942, 22.68030, 17.34921, 19.95431
+## $ duration_stdev &lt;dbl&gt; 11.660873, 13.685773, 9.521044, 11.310917
+## $ age_mean       &lt;dbl&gt; 35.33942, 34.10409, 37.19048, 36.40102
+## $ age_stdev      &lt;dbl&gt; 12.07235, 11.01950, 12.48981, 10.78622</code></pre>
+<ul>
+<li><p>对列进行重新编码</p>
+<ul>
+<li>if_else() 多用于处理二分类，也可以多分类但不推荐</li>
+</ul></li>
+</ul>
+<pre class="r"><code># 当age&gt;=60，老人，1
+german %&gt;% 
+  mutate(old = if_else(age&lt;60,0,1)) %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 22
+## $ status                  &lt;fct&gt; no checking account, no checking account, ... …
+## $ duration                &lt;int&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6…
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ amount                  &lt;int&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361,…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ employment_duration     &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 …
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ property                &lt;fct&gt; car or other, unknown / no property, unknown /…
+## $ age                     &lt;int&gt; 21, 36, 23, 39, 38, 48, 39, 40, 65, 23, 36, 24…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ job                     &lt;fct&gt; skilled employee/official, skilled employee/of…
+## $ people_liable           &lt;fct&gt; 0 to 2, 3 or more, 0 to 2, 3 or more, 0 to 2, …
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, yes, yes, yes, yes, yes, no, no, n…
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…
+## $ old                     &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0…</code></pre>
+<pre class="r"><code># 也可以用多个if_else 嵌套处理多分类
+# age&lt;30:0 ; age&lt;60:1; else:2 
+german %&gt;% 
+  mutate(age_category = if_else(age&lt;30,0,
+                                if_else(age&lt;60,1,2)),
+         .before=1) %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 22
+## $ age_category            &lt;dbl&gt; 0, 1, 0, 1, 1, 1, 1, 1, 2, 0, 1, 0, 1, 1, 0, 1…
+## $ status                  &lt;fct&gt; no checking account, no checking account, ... …
+## $ duration                &lt;int&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6…
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ amount                  &lt;int&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361,…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ employment_duration     &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 …
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ property                &lt;fct&gt; car or other, unknown / no property, unknown /…
+## $ age                     &lt;int&gt; 21, 36, 23, 39, 38, 48, 39, 40, 65, 23, 36, 24…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ job                     &lt;fct&gt; skilled employee/official, skilled employee/of…
+## $ people_liable           &lt;fct&gt; 0 to 2, 3 or more, 0 to 2, 3 or more, 0 to 2, …
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, yes, yes, yes, yes, yes, no, no, n…
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…</code></pre>
+<ul>
+<li>case_when() 用于处理多分类，要比if_else()更直接好用</li>
+</ul>
+<pre class="r"><code># 同理对年龄进行多分类
+german %&gt;% 
+  mutate(age_category = case_when(
+    age&lt;30 ~ 0,
+    age&lt;60 ~ 1,
+    TRUE ~ 2
+  ),
+  .before=1) %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 22
+## $ age_category            &lt;dbl&gt; 0, 1, 0, 1, 1, 1, 1, 1, 2, 0, 1, 0, 1, 1, 0, 1…
+## $ status                  &lt;fct&gt; no checking account, no checking account, ... …
+## $ duration                &lt;int&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6…
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ amount                  &lt;int&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361,…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ employment_duration     &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 …
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ property                &lt;fct&gt; car or other, unknown / no property, unknown /…
+## $ age                     &lt;int&gt; 21, 36, 23, 39, 38, 48, 39, 40, 65, 23, 36, 24…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ job                     &lt;fct&gt; skilled employee/official, skilled employee/of…
+## $ people_liable           &lt;fct&gt; 0 to 2, 3 or more, 0 to 2, 3 or more, 0 to 2, …
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, yes, yes, yes, yes, yes, no, no, n…
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…</code></pre>
+<pre class="r"><code>german %&gt;% 
+  mutate(age_category = case_when(
+    age&lt;30 ~ &quot;young&quot;,
+    age&lt;60 ~ &quot;middle&quot;,
+    TRUE ~ &quot;old&quot;
+  ),
+  .before=1) %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 22
+## $ age_category            &lt;chr&gt; &quot;young&quot;, &quot;middle&quot;, &quot;young&quot;, &quot;middle&quot;, &quot;middle&quot;…
+## $ status                  &lt;fct&gt; no checking account, no checking account, ... …
+## $ duration                &lt;int&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6…
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ amount                  &lt;int&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361,…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ employment_duration     &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 …
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ property                &lt;fct&gt; car or other, unknown / no property, unknown /…
+## $ age                     &lt;int&gt; 21, 36, 23, 39, 38, 48, 39, 40, 65, 23, 36, 24…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ job                     &lt;fct&gt; skilled employee/official, skilled employee/of…
+## $ people_liable           &lt;fct&gt; 0 to 2, 3 or more, 0 to 2, 3 or more, 0 to 2, …
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, yes, yes, yes, yes, yes, no, no, n…
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…</code></pre>
+<ul>
+<li>one-hot 处理 correlationfunnel</li>
+</ul>
+<p>把所有变量进行one-hot处理，生成二进制 (0/1) 变量的特征集。</p>
+<ul>
+<li><p>Numeric data 被切分（使用n_bins）成分类数据，然后所有分类数据都被单热编码以产生二进制特征。为了防止低频类别（高基数类别）增加维数（结果数据框的宽度），我们使用 thresh_infreq = 0.01 和 name_infreq = “OTHER” 对多余的类别进行分组。</p></li>
+<li><p>Categorical data : one-hot encoding</p></li>
+</ul>
+<pre class="r"><code># 把所有变量进行one-hot 处理
+# install.packages(&quot;correlationfunnel&quot;)
+german %&gt;% 
+  correlationfunnel::binarize(n_bins = 5, thresh_infreq = 0.1, name_infreq = &quot;OTHER&quot;,
+                              one_hot = TRUE) %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 1,000
+## Columns: 74
+## $ status__no_checking_account                                   &lt;dbl&gt; 1, 1, 0,…
+## $ `status__..._&lt;_0_DM`                                          &lt;dbl&gt; 0, 0, 1,…
+## $ `status__..._&gt;=_200_DM_/_salary_for_at_least_1_year`          &lt;dbl&gt; 0, 0, 0,…
+## $ status__OTHER                                                 &lt;dbl&gt; 0, 0, 0,…
+## $ `duration__-Inf_12`                                           &lt;dbl&gt; 0, 1, 1,…
+## $ duration__12_15                                               &lt;dbl&gt; 0, 0, 0,…
+## $ duration__15_24                                               &lt;dbl&gt; 1, 0, 0,…
+## $ duration__24_30                                               &lt;dbl&gt; 0, 0, 0,…
+## $ duration__30_Inf                                              &lt;dbl&gt; 0, 0, 0,…
+## $ `credit_history__no_credits_taken/all_credits_paid_back_duly` &lt;dbl&gt; 0, 0, 1,…
+## $ credit_history__all_credits_at_this_bank_paid_back_duly       &lt;dbl&gt; 1, 1, 0,…
+## $ credit_history__OTHER                                         &lt;dbl&gt; 0, 0, 0,…
+## $ purpose__others                                               &lt;dbl&gt; 0, 1, 0,…
+## $ `purpose__car_(new)`                                          &lt;dbl&gt; 0, 0, 0,…
+## $ `purpose__car_(used)`                                         &lt;dbl&gt; 1, 0, 0,…
+## $ `purpose__furniture/equipment`                                &lt;dbl&gt; 0, 0, 0,…
+## $ purpose__OTHER                                                &lt;dbl&gt; 0, 0, 1,…
+## $ `amount__-Inf_1262`                                           &lt;dbl&gt; 1, 0, 1,…
+## $ amount__1262_1906.8                                           &lt;dbl&gt; 0, 0, 0,…
+## $ amount__1906.8_2852.4                                         &lt;dbl&gt; 0, 1, 0,…
+## $ amount__2852.4_4720                                           &lt;dbl&gt; 0, 0, 0,…
+## $ amount__4720_Inf                                              &lt;dbl&gt; 0, 0, 0,…
+## $ `savings__unknown/no_savings_account`                         &lt;dbl&gt; 1, 1, 0,…
+## $ `savings__..._&lt;__100_DM`                                      &lt;dbl&gt; 0, 0, 1,…
+## $ `savings__..._&gt;=_1000_DM`                                     &lt;dbl&gt; 0, 0, 0,…
+## $ savings__OTHER                                                &lt;dbl&gt; 0, 0, 0,…
+## $ `employment_duration__&lt;_1_yr`                                 &lt;dbl&gt; 1, 0, 0,…
+## $ `employment_duration__1_&lt;=_..._&lt;_4_yrs`                       &lt;dbl&gt; 0, 1, 0,…
+## $ `employment_duration__4_&lt;=_..._&lt;_7_yrs`                       &lt;dbl&gt; 0, 0, 1,…
+## $ `employment_duration__&gt;=_7_yrs`                               &lt;dbl&gt; 0, 0, 0,…
+## $ employment_duration__OTHER                                    &lt;dbl&gt; 0, 0, 0,…
+## $ installment_rate__1                                           &lt;dbl&gt; 0, 0, 0,…
+## $ installment_rate__2                                           &lt;dbl&gt; 0, 1, 1,…
+## $ installment_rate__3                                           &lt;dbl&gt; 0, 0, 0,…
+## $ installment_rate__4                                           &lt;dbl&gt; 1, 0, 0,…
+## $ `personal_status_sex__female_:_non-single_or_male_:_single`   &lt;dbl&gt; 1, 0, 1,…
+## $ `personal_status_sex__male_:_married/widowed`                 &lt;dbl&gt; 0, 1, 0,…
+## $ personal_status_sex__OTHER                                    &lt;dbl&gt; 0, 0, 0,…
+## $ other_debtors__none                                           &lt;dbl&gt; 1, 1, 1,…
+## $ other_debtors__OTHER                                          &lt;dbl&gt; 0, 0, 0,…
+## $ present_residence__1                                          &lt;dbl&gt; 0, 0, 0,…
+## $ present_residence__2                                          &lt;dbl&gt; 0, 1, 0,…
+## $ present_residence__3                                          &lt;dbl&gt; 0, 0, 0,…
+## $ present_residence__4                                          &lt;dbl&gt; 1, 0, 1,…
+## $ `property__unknown_/_no_property`                             &lt;dbl&gt; 0, 1, 1,…
+## $ property__car_or_other                                        &lt;dbl&gt; 1, 0, 0,…
+## $ `property__building_soc._savings_agr./life_insurance`         &lt;dbl&gt; 0, 0, 0,…
+## $ property__real_estate                                         &lt;dbl&gt; 0, 0, 0,…
+## $ `age__-Inf_26`                                                &lt;dbl&gt; 1, 0, 1,…
+## $ age__26_30                                                    &lt;dbl&gt; 0, 0, 0,…
+## $ age__30_36                                                    &lt;dbl&gt; 0, 1, 0,…
+## $ age__36_44                                                    &lt;dbl&gt; 0, 0, 0,…
+## $ age__44_Inf                                                   &lt;dbl&gt; 0, 0, 0,…
+## $ other_installment_plans__bank                                 &lt;dbl&gt; 0, 0, 0,…
+## $ other_installment_plans__none                                 &lt;dbl&gt; 1, 1, 1,…
+## $ other_installment_plans__OTHER                                &lt;dbl&gt; 0, 0, 0,…
+## $ housing__for_free                                             &lt;dbl&gt; 1, 1, 1,…
+## $ housing__rent                                                 &lt;dbl&gt; 0, 0, 0,…
+## $ housing__own                                                  &lt;dbl&gt; 0, 0, 0,…
+## $ number_credits__1                                             &lt;dbl&gt; 1, 0, 1,…
+## $ `number_credits__2-3`                                         &lt;dbl&gt; 0, 1, 0,…
+## $ number_credits__OTHER                                         &lt;dbl&gt; 0, 0, 0,…
+## $ `job__unskilled_-_resident`                                   &lt;dbl&gt; 0, 0, 1,…
+## $ `job__skilled_employee/official`                              &lt;dbl&gt; 1, 1, 0,…
+## $ `job__manager/self-empl./highly_qualif._employee`             &lt;dbl&gt; 0, 0, 0,…
+## $ job__OTHER                                                    &lt;dbl&gt; 0, 0, 0,…
+## $ people_liable__3_or_more                                      &lt;dbl&gt; 0, 1, 0,…
+## $ people_liable__0_to_2                                         &lt;dbl&gt; 1, 0, 1,…
+## $ telephone__no                                                 &lt;dbl&gt; 1, 1, 1,…
+## $ `telephone__yes_(under_customer_name)`                        &lt;dbl&gt; 0, 0, 0,…
+## $ foreign_worker__no                                            &lt;dbl&gt; 1, 1, 1,…
+## $ foreign_worker__OTHER                                         &lt;dbl&gt; 0, 0, 0,…
+## $ credit_risk__bad                                              &lt;dbl&gt; 0, 0, 0,…
+## $ credit_risk__good                                             &lt;dbl&gt; 1, 1, 1,…</code></pre>
+<p>关于correlationfunnel包的更多具体使用请查看<a href="https://blog.csdn.net/Allenmumu/article/details/118329974">R packages: Correlationfunnel 相关漏斗图，可视化因变量自变量之间的相关关系</a></p>
+</div>
+<div id="筛选行-filter" class="section level2">
+<h2>3.3 筛选行 filter()</h2>
+<pre class="r"><code># 选取满足多个条件的行，这里, 相当于 &amp; 表示和的意思
+german %&gt;% 
+  filter(age &gt; 60, credit_risk == &quot;good&quot;, telephone == &quot;no&quot;) %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 20
+## Columns: 21
+## $ status                  &lt;fct&gt; ... &gt;= 200 DM / salary for at least 1 year, ..…
+## $ duration                &lt;int&gt; 18, 18, 15, 12, 9, 6, 24, 5, 12, 12, 12, 13, 9…
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, no cr…
+## $ purpose                 &lt;fct&gt; furniture/equipment, repairs, car (used), repa…
+## $ amount                  &lt;int&gt; 1098, 1239, 1520, 2012, 3832, 1299, 2384, 3448…
+## $ savings                 &lt;fct&gt; unknown/no savings account, ... &gt;= 1000 DM, ..…
+## $ employment_duration     &lt;fct&gt; unemployed, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 4 &lt;= .…
+## $ installment_rate        &lt;ord&gt; &lt; 20, &lt; 20, &lt; 20, &lt; 20, &gt;= 35, &gt;= 35, &lt; 20, &gt;=…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, &gt;= 7 yrs, &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs…
+## $ property                &lt;fct&gt; building soc. savings agr./life insurance, rea…
+## $ age                     &lt;int&gt; 65, 61, 63, 61, 64, 74, 64, 74, 65, 61, 66, 64…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, none, none, bank, none…
+## $ housing                 &lt;fct&gt; rent, own, rent, rent, rent, rent, for free, r…
+## $ number_credits          &lt;ord&gt; 2-3, 1, 1, 1, 1, 4-5, 1, 1, &gt;= 6, 2-3, 4-5, 1,…
+## $ job                     &lt;fct&gt; unemployed/unskilled - non-resident, skilled e…
+## $ people_liable           &lt;fct&gt; 0 to 2, 0 to 2, 0 to 2, 0 to 2, 0 to 2, 3 or m…
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, no, no, yes, no, no, no, no, no, n…
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…</code></pre>
+<pre class="r"><code>german %&gt;% 
+  filter(age != 35 | age&gt;60, credit_risk == &quot;good&quot;) %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 666
+## Columns: 21
+## $ status                  &lt;fct&gt; no checking account, no checking account, ... …
+## $ duration                &lt;int&gt; 18, 9, 12, 12, 12, 10, 8, 6, 18, 24, 11, 30, 6…
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, all c…
+## $ purpose                 &lt;fct&gt; car (used), others, retraining, others, others…
+## $ amount                  &lt;int&gt; 1049, 2799, 841, 2122, 2171, 2241, 3398, 1361,…
+## $ savings                 &lt;fct&gt; unknown/no savings account, unknown/no savings…
+## $ employment_duration     &lt;fct&gt; &lt; 1 yr, 1 &lt;= ... &lt; 4 yrs, 4 &lt;= ... &lt; 7 yrs, 1 …
+## $ installment_rate        &lt;ord&gt; &lt; 20, 25 &lt;= ... &lt; 35, 25 &lt;= ... &lt; 35, 20 &lt;= ..…
+## $ personal_status_sex     &lt;fct&gt; female : non-single or male : single, male : m…
+## $ other_debtors           &lt;fct&gt; none, none, none, none, none, none, none, none…
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, 1 &lt;= ... &lt; 4 yrs, &gt;= 7 yrs, 1 &lt;= ...…
+## $ property                &lt;fct&gt; car or other, unknown / no property, unknown /…
+## $ age                     &lt;int&gt; 21, 36, 23, 39, 38, 48, 39, 40, 65, 23, 36, 24…
+## $ other_installment_plans &lt;fct&gt; none, none, none, none, bank, none, none, none…
+## $ housing                 &lt;fct&gt; for free, for free, for free, for free, rent, …
+## $ number_credits          &lt;ord&gt; 1, 2-3, 1, 2-3, 2-3, 2-3, 2-3, 1, 2-3, 1, 2-3,…
+## $ job                     &lt;fct&gt; skilled employee/official, skilled employee/of…
+## $ people_liable           &lt;fct&gt; 0 to 2, 3 or more, 0 to 2, 3 or more, 0 to 2, …
+## $ telephone               &lt;fct&gt; no, no, no, no, no, no, no, no, no, no, no, no…
+## $ foreign_worker          &lt;fct&gt; no, no, no, yes, yes, yes, yes, yes, no, no, n…
+## $ credit_risk             &lt;fct&gt; good, good, good, good, good, good, good, good…</code></pre>
+<pre class="r"><code># 选取age列和duration列都大于50的行
+german %&gt;% 
+  filter(if_all(c(age, duration), ~ .x &gt; 50)) %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 4
+## Columns: 21
+## $ status                  &lt;fct&gt; ... &gt;= 200 DM / salary for at least 1 year, no…
+## $ duration                &lt;int&gt; 60, 60, 60, 54
+## $ credit_history          &lt;fct&gt; all credits at this bank paid back duly, exist…
+## $ purpose                 &lt;fct&gt; others, retraining, business, retraining
+## $ amount                  &lt;int&gt; 13756, 6836, 14782, 15945
+## $ savings                 &lt;fct&gt; ... &gt;= 1000 DM, unknown/no savings account, ..…
+## $ employment_duration     &lt;fct&gt; &gt;= 7 yrs, &gt;= 7 yrs, &gt;= 7 yrs, &lt; 1 yr
+## $ installment_rate        &lt;ord&gt; 25 &lt;= ... &lt; 35, 20 &lt;= ... &lt; 25, 20 &lt;= ... &lt; 25…
+## $ personal_status_sex     &lt;fct&gt; male : married/widowed, male : married/widowed…
+## $ other_debtors           &lt;fct&gt; none, none, none, none
+## $ present_residence       &lt;ord&gt; &gt;= 7 yrs, &gt;= 7 yrs, &gt;= 7 yrs, &gt;= 7 yrs
+## $ property                &lt;fct&gt; real estate, real estate, real estate, real es…
+## $ age                     &lt;int&gt; 63, 63, 60, 58
+## $ other_installment_plans &lt;fct&gt; bank, none, bank, none
+## $ housing                 &lt;fct&gt; own, rent, own, for free
+## $ number_credits          &lt;ord&gt; 1, 2-3, 2-3, 1
+## $ job                     &lt;fct&gt; manager/self-empl./highly qualif. employee, sk…
+## $ people_liable           &lt;fct&gt; 0 to 2, 0 to 2, 0 to 2, 0 to 2
+## $ telephone               &lt;fct&gt; yes (under customer name), yes (under customer…
+## $ foreign_worker          &lt;fct&gt; no, no, no, no
+## $ credit_risk             &lt;fct&gt; good, bad, bad, bad</code></pre>
+</div>
+<div id="分组汇总" class="section level2">
+<h2>分组汇总</h2>
+<pre class="r"><code>german %&gt;% 
+  group_by(status) %&gt;% 
+  count(credit_risk, name = &quot;n&quot;) %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 8
+## Columns: 3
+## Groups: status [4]
+## $ status      &lt;fct&gt; no checking account, no checking account, ... &lt; 0 DM, ... …
+## $ credit_risk &lt;fct&gt; bad, good, bad, good, bad, good, bad, good
+## $ n           &lt;int&gt; 135, 139, 105, 164, 14, 49, 46, 348</code></pre>
+<pre class="r"><code>german_wider = german %&gt;% 
+  group_by(status) %&gt;% 
+  count(credit_risk, name = &quot;n&quot;) %&gt;% 
+  pivot_wider(
+    names_from = credit_risk,
+    values_from = n,
+    values_fill = 0
+  ) %&gt;% 
+  ungroup() %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 4
+## Columns: 3
+## $ status &lt;fct&gt; no checking account, ... &lt; 0 DM, 0&lt;= ... &lt; 200 DM, ... &gt;= 200 D…
+## $ bad    &lt;int&gt; 135, 105, 14, 46
+## $ good   &lt;int&gt; 139, 164, 49, 348</code></pre>
+<p>生成分组表格的快捷方式</p>
+<pre class="r"><code>library(table1)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;table1&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     units, units&lt;-</code></pre>
+<pre class="r"><code># 汇总如下变量 
+table1(~  duration + age + status + job , data = german)</code></pre>
+<div class="Rtable1"><table class="Rtable1">
+<thead>
+<tr>
+<th class='rowlabel firstrow lastrow'></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Overall<br><span class='stratn'>(N=1000)</span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='rowlabel firstrow'>duration</td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>20.9 (12.1)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Median [Min, Max]</td>
+<td class='lastrow'>18.0 [4.00, 72.0]</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>age</td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>35.5 (11.4)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Median [Min, Max]</td>
+<td class='lastrow'>33.0 [19.0, 75.0]</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>status</td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>no checking account</td>
+<td>274 (27.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>... < 0 DM</td>
+<td>269 (26.9%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>0<= ... < 200 DM</td>
+<td>63 (6.3%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>... >= 200 DM / salary for at least 1 year</td>
+<td class='lastrow'>394 (39.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>job</td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>unemployed/unskilled - non-resident</td>
+<td>22 (2.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>unskilled - resident</td>
+<td>200 (20.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>skilled employee/official</td>
+<td>630 (63.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>manager/self-empl./highly qualif. employee</td>
+<td class='lastrow'>148 (14.8%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<pre class="r"><code># 按credit_risk 分组汇总变量
+table1(~  duration + age + status + job | credit_risk, data = german)</code></pre>
+<div class="Rtable1"><table class="Rtable1">
+<thead>
+<tr>
+<th class='rowlabel firstrow lastrow'></th>
+<th class='firstrow lastrow'><span class='stratlabel'>bad<br><span class='stratn'>(N=300)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>good<br><span class='stratn'>(N=700)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Overall<br><span class='stratn'>(N=1000)</span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='rowlabel firstrow'>duration</td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>24.9 (13.3)</td>
+<td>19.2 (11.1)</td>
+<td>20.9 (12.1)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Median [Min, Max]</td>
+<td class='lastrow'>24.0 [6.00, 72.0]</td>
+<td class='lastrow'>18.0 [4.00, 60.0]</td>
+<td class='lastrow'>18.0 [4.00, 72.0]</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>age</td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>34.0 (11.2)</td>
+<td>36.2 (11.3)</td>
+<td>35.5 (11.4)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Median [Min, Max]</td>
+<td class='lastrow'>31.0 [19.0, 74.0]</td>
+<td class='lastrow'>34.0 [19.0, 75.0]</td>
+<td class='lastrow'>33.0 [19.0, 75.0]</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>status</td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>no checking account</td>
+<td>135 (45.0%)</td>
+<td>139 (19.9%)</td>
+<td>274 (27.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>... < 0 DM</td>
+<td>105 (35.0%)</td>
+<td>164 (23.4%)</td>
+<td>269 (26.9%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>0<= ... < 200 DM</td>
+<td>14 (4.7%)</td>
+<td>49 (7.0%)</td>
+<td>63 (6.3%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>... >= 200 DM / salary for at least 1 year</td>
+<td class='lastrow'>46 (15.3%)</td>
+<td class='lastrow'>348 (49.7%)</td>
+<td class='lastrow'>394 (39.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'>job</td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>unemployed/unskilled - non-resident</td>
+<td>7 (2.3%)</td>
+<td>15 (2.1%)</td>
+<td>22 (2.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>unskilled - resident</td>
+<td>56 (18.7%)</td>
+<td>144 (20.6%)</td>
+<td>200 (20.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>skilled employee/official</td>
+<td>186 (62.0%)</td>
+<td>444 (63.4%)</td>
+<td>630 (63.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>manager/self-empl./highly qualif. employee</td>
+<td class='lastrow'>51 (17.0%)</td>
+<td class='lastrow'>97 (13.9%)</td>
+<td class='lastrow'>148 (14.8%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="总结" class="section level1">
+<h1>总结</h1>
+<p>tidyverse 的优势包括一致的功能、工作流覆盖、数据科学教育的途径、开发数据科学工具的简约方法以及提高生产力的可能性。tidyverse 用一种更加优雅且符合人直观思路的方式，以管道式、泛函式编程技术实现了数据科学的
+整个流程:数据导入、数据清洗、数据操作、数据可视化、数据建模、可重现与交互报告。</p>
+<p>如果你也面临以下问题待解决：</p>
+<ul>
+<li>处理自己领域真实的数据</li>
+<li>对数据进行建模分析、可视化</li>
+<li>得出有用的结论</li>
+</ul>
+<p>欢迎使用tidyverse工作流。是从basic R 还是tidy R入门R语言的争议一直都有，没有绝对的对错，只有合适与否。基于我自身，我需要解决的就是上述三个问题，因此tidy R 工作流程更适合我。</p>
+</div>
